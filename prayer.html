@@ -25,7 +25,7 @@
         <section class="section animate-in">
             <div class="glass section" style="padding: 25px; border-radius: 25px;">
                 <h2 class="serif" style="margin-bottom: 20px; font-size: 1.5rem;">Submit a Request</h2>
-                <form id="prayerForm" class="prayer-form">
+                <form id="prayerForm" class="prayer-form" onsubmit="submitPrayer(event)">
                     <div class="form-group">
                         <label for="userName">Name (Optional)</label>
                         <input type="text" id="userName" placeholder="Anonymous">
@@ -177,10 +177,10 @@
             }
         }
 
-        // Handle form submission
-        document.getElementById('prayerForm')?.addEventListener('submit', async (e) => {
+        // Handle form submission via inline or robust attached listener
+        async function submitPrayer(e) {
             e.preventDefault();
-            const name = document.getElementById('userName').value;
+            const name = document.getElementById('userName').value || 'Anonymous';
             const request = document.getElementById('prayerRequest').value;
 
             if (request) {
@@ -196,12 +196,16 @@
                         document.getElementById('userName').value = '';
                         alert('Your prayer request has been shared with the community.');
                         loadPrayers(); // Refresh the list
+                    } else {
+                        throw new Error('Server returned ' + res.status);
                     }
                 } catch (error) {
                     console.error("Error submitting prayer:", error);
+                    alert("Database connection failed. Are you running the server? Error: " + error.message);
                 }
             }
-        });
+        }
+
 
         // Load initially
         loadPrayers();
