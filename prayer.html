@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Prayer Wall - Grace Community Church</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="section" style="padding-top: 40px; text-align: center;">
+            <div style="width: 80px; height: 80px; background: transparent; margin: 0 auto 15px;">
+                <img src="assets/church-logo.png" alt="Logo" style="width: 100%; height: auto;">
+            </div>
+            <h1 class="serif" style="color: var(--primary-gold); font-size: 2rem; line-height: 1.1;">Agape Gospel
+                Ministries</h1>
+            <p style="color: var(--text-muted); margin-top: 5px;">Prayer Wall • Takkellapadu</p>
+        </header>
+
+        <!-- Submit Prayer Form -->
+        <section class="section animate-in">
+            <div class="glass section" style="padding: 25px; border-radius: 25px;">
+                <h2 class="serif" style="margin-bottom: 20px; font-size: 1.5rem;">Submit a Request</h2>
+                <form id="prayerForm" class="prayer-form">
+                    <div class="form-group">
+                        <label for="userName">Name (Optional)</label>
+                        <input type="text" id="userName" placeholder="Anonymous">
+                    </div>
+                    <div class="form-group">
+                        <label for="prayerRequest">Your Prayer Request</label>
+                        <textarea id="prayerRequest" rows="4" placeholder="How can we pray for you?"
+                            required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Share Request</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Prayer List -->
+        <section class="section animate-in" style="animation-delay: 0.2s;">
+            <div class="section-title">
+                <h2>Community Prayers</h2>
+                <span id="prayerCount" style="font-size: 0.9rem; color: var(--text-muted);">3 Active</span>
+            </div>
+
+            <div id="prayerContainer">
+                <!-- Sample Prayer 1 -->
+                <div class="glass prayer-card animate-in">
+                    <div class="prayer-meta">
+                        <span>Anonymous</span>
+                        <span>2 hours ago</span>
+                    </div>
+                    <div class="prayer-text">"Please pray for my grandmother who is currently in the hospital. Strength
+                        for the family."</div>
+                    <div class="prayer-actions">
+                        <button class="pray-btn" onclick="togglePray(this)">
+                            <i class="fa-solid fa-hands-praying"></i> Praying (12)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sample Prayer 2 -->
+                <div class="glass prayer-card animate-in" style="animation-delay: 0.1s;">
+                    <div class="prayer-meta">
+                        <span>Sarah J.</span>
+                        <span>5 hours ago</span>
+                    </div>
+                    <div class="prayer-text">"Praising God for a new job opportunity that opened up this week!"</div>
+                    <div class="prayer-actions">
+                        <button class="pray-btn" onclick="togglePray(this)">
+                            <i class="fa-solid fa-hands-praying"></i> Praying (24)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <nav class="glass bottom-nav">
+            <a href="sermons.html" class="nav-item">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Sermons</span>
+            </a>
+            <a href="events.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Events</span>
+            </a>
+            <a href="index.html" class="nav-item home-item">
+                <div class="home-circle">
+                    <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
+                </div>
+                <span>Home</span>
+            </a>
+            <a href="bible.html" class="nav-item">
+                <i class="fa-solid fa-bible"></i>
+                <span>Bible</span>
+            </a>
+            <a href="prayer.html" class="nav-item active">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Prayer</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        // Format date niceley
+        function timeAgo(dateString) {
+            const date = new Date(dateString);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = Math.floor(seconds / 3600);
+            if (interval >= 24) return Math.floor(interval / 24) + " days ago";
+            if (interval >= 1) return interval + " hours ago";
+            interval = Math.floor(seconds / 60);
+            if (interval >= 1) return interval + " minutes ago";
+            return "Just now";
+        }
+
+        // Fetch prayers from backend
+        async function loadPrayers() {
+            try {
+                const response = await fetch('/api/prayers');
+                const prayers = await response.json();
+
+                const container = document.getElementById('prayerContainer');
+                document.getElementById('prayerCount').innerText = `${prayers.length} Active`;
+
+                container.innerHTML = ''; // Clear container
+
+                prayers.forEach((prayer, index) => {
+                    const delay = index * 0.1;
+                    const prayerHTML = `
+                        <div class="glass prayer-card animate-in" style="animation-delay: ${delay}s;">
+                            <div class="prayer-meta">
+                                <span>${prayer.user_name}</span>
+                                <span>${timeAgo(prayer.created_at)}</span>
+                            </div>
+                            <div class="prayer-text">"${prayer.request}"</div>
+                            <div class="prayer-actions">
+                                <button class="pray-btn" onclick="togglePray(this, ${prayer.id})">
+                                    <i class="fa-solid fa-hands-praying"></i> Praying (<span class="p-count">${prayer.praying_count}</span>)
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += prayerHTML;
+                });
+            } catch (error) {
+                console.error('Error fetching prayers:', error);
+            }
+        }
+
+        // Handle Praying Toggle
+        async function togglePray(btn, id) {
+            btn.classList.toggle('active');
+            const countSpan = btn.querySelector('.p-count');
+            let count = parseInt(countSpan.innerText);
+
+            const action = btn.classList.contains('active') ? 'increment' : 'decrement';
+
+            if (action === 'increment') {
+                countSpan.innerText = count + 1;
+            } else {
+                countSpan.innerText = count - 1;
+            }
+
+            try {
+                await fetch(`/api/prayers/${id}/pray`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action })
+                });
+            } catch (error) {
+                console.error("Error updating count", error);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('prayerForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('userName').value;
+            const request = document.getElementById('prayerRequest').value;
+
+            if (request) {
+                try {
+                    const res = await fetch('/api/prayers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userName: name, request })
+                    });
+
+                    if (res.ok) {
+                        document.getElementById('prayerRequest').value = '';
+                        document.getElementById('userName').value = '';
+                        alert('Your prayer request has been shared with the community.');
+                        loadPrayers(); // Refresh the list
+                    }
+                } catch (error) {
+                    console.error("Error submitting prayer:", error);
+                }
+            }
+        });
+
+        // Load initially
+        loadPrayers();
+    </script>
+</body>
+
+</html>

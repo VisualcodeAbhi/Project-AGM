@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agape Gospel Ministries</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Hero Section -->
+        <header class="hero-section">
+            <div class="founding-badge">Est. 2003</div>
+
+            <div class="hero-content animate-in"
+                style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 15px;">
+                <div style="flex: 1;">
+                    <p style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">Welcome to</p>
+                    <h1 class="serif"
+                        style="color: var(--primary-gold); font-size: 2.2rem; line-height: 1.1; margin-bottom: 5px; text-shadow: 2px 2px 10px rgba(0,0,0,0.7);">
+                        Agape Gospel Ministries</h1>
+                    <a href="contact.html" style="text-decoration: none; color: inherit;">
+                        <p style="margin-top: 5px;"><i class="fa-solid fa-location-dot"></i> Takkellapadu</p>
+                    </a>
+                    <p
+                        style="font-style: italic; margin-top: 8px; opacity: 0.9; text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
+                        "Walking in Faith since 2003"</p>
+                </div>
+                <!-- Church Logo Redirection -->
+                <a href="contact.html" class="hero-logo"
+                    style="width: 85px; height: 85px; flex-shrink: 0; text-decoration: none;">
+                    <img src="assets/church-logo.png" alt="Agape Gospel Ministries Logo"
+                        style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.4));">
+                </a>
+            </div>
+        </header>
+
+        <!-- Daily Verse -->
+        <section class="section animate-in" style="animation-delay: 0.1s;">
+            <div class="section-title">
+                <h2>Daily Verse</h2>
+            </div>
+            <div class="glass animate-in"
+                style="overflow: hidden; border-radius: 20px; padding: 10px; animation-delay: 0.1s; cursor: pointer;"
+                onclick="openVerseModal()">
+                <img src="assets/Daily.jpeg" alt="Daily Verse" id="verseImage"
+                    style="width: 100%; height: auto; border-radius: 12px; display: block;">
+            </div>
+        </section>
+
+        <!-- Sunday Service Card -->
+        <section class="section animate-in" style="animation-delay: 0.2s;">
+            <div class="section-title">
+                <h2>Upcoming Service</h2>
+            </div>
+            <a href="live.html" style="text-decoration: none; color: inherit;">
+                <div class="glass media-card animate-in" style="height: 250px;">
+                    <img src="https://img.youtube.com/vi/HOuTe90NEeQ/maxresdefault.jpg" alt="Latest Service"
+                        style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="play-overlay" style="opacity: 1;">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div style="position: absolute; top: 15px; left: 15px;">
+                        <span class="badge" style="background: #ff4757; color: white;">LIVE SOON</span>
+                    </div>
+                    <div class="media-info">
+                        <h3 class="serif" style="font-size: 1.4rem;">The Power of Grace</h3>
+                        <p style="font-size: 0.9rem; opacity: 0.8;">Sunday Service • Watch Previous Live</p>
+                    </div>
+                </div>
+            </a>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="section animate-in" style="animation-delay: 0.3s;">
+            <div class="section-title">
+                <h2>Explore</h2>
+            </div>
+            <div class="card-scroll">
+                <a href="prayer.html" class="glass service-card"
+                    style="min-width: 160px; align-items: center; text-align: center; text-decoration: none; color: inherit;">
+                    <i class="fa-solid fa-hands-praying" style="font-size: 2rem; color: var(--primary-gold);"></i>
+                    <p style="font-weight: 600;">Prayer</p>
+                </a>
+                <div class="glass service-card" style="min-width: 160px; align-items: center; text-align: center;">
+                    <i class="fa-solid fa-heart" style="font-size: 2rem; color: var(--primary-gold);"></i>
+                    <p style="font-weight: 600;">Giving</p>
+                </div>
+                <div class="glass service-card" style="min-width: 160px; align-items: center; text-align: center;">
+                    <i class="fa-solid fa-users" style="font-size: 2rem; color: var(--primary-gold);"></i>
+                    <p style="font-weight: 600;">Groups</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Sermons -->
+        <section class="section animate-in" style="animation-delay: 0.4s;">
+            <div class="section-title">
+                <h2>Recent Sermons</h2>
+                <a href="sermons.html">See All</a>
+            </div>
+            <div class="media-grid">
+                <a href="https://youtube.com/@agapegospelministries2003?si=8IHO6zC2QKy3QpI7" target="_blank"
+                    style="text-decoration: none; color: inherit;">
+                    <div class="media-card glass">
+                        <img src="assets/sermons-preview.png" alt="Sermon thumbnail">
+                        <div class="media-info">
+                            <h4 class="serif">Latest Message</h4>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">Watch on YouTube</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Bottom Navigation -->
+        <nav class="glass bottom-nav">
+            <a href="sermons.html" class="nav-item">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Sermons</span>
+            </a>
+            <a href="events.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Events</span>
+            </a>
+            <a href="index.html" class="nav-item home-item active">
+                <div class="home-circle">
+                    <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
+                </div>
+            </a>
+            <a href="bible.html" class="nav-item">
+                <i class="fa-solid fa-bible"></i>
+                <span>Bible</span>
+            </a>
+            <a href="prayer.html" class="nav-item">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Prayer</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Fullscreen Verse Modal -->
+    <div id="verseModal" class="modal">
+        <span class="modal-close" onclick="closeVerseModal()">&times;</span>
+        <img class="modal-content" id="modalImg">
+        <div class="share-toolbar">
+            <button class="share-btn" onclick="shareToWhatsApp()">
+                <i class="fa-brands fa-whatsapp"></i> Share to WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sermons - Agape Gospel Ministries</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="section" style="padding-top: 40px; text-align: center;">
+            <div style="width: 80px; height: 80px; background: transparent; margin: 0 auto 15px;">
+                <img src="assets/church-logo.png" alt="Logo" style="width: 100%; height: auto;">
+            </div>
+            <h1 class="serif" style="color: var(--primary-gold); font-size: 2rem; line-height: 1.1;">Sermon Library</h1>
+            <p style="color: var(--text-muted); margin-top: 5px;">Agape Gospel Ministries</p>
+        </header>
+
+        <!-- Search & Categories -->
+        <section class="section animate-in">
+            <div class="form-group" style="margin-bottom: 25px;">
+                <div style="position: relative;">
+                    <i class="fa-solid fa-magnifying-glass"
+                        style="position: absolute; left: 15px; top: 15px; color: var(--text-muted);"></i>
+                    <input type="text" placeholder="Search sermons..." style="padding-left: 45px; width: 100%;">
+                </div>
+            </div>
+
+            <div class="category-scroll">
+                <div class="category-chip active">All Videos</div>
+                <div class="category-chip">Newest</div>
+                <div class="category-chip">2024 Series</div>
+                <div class="category-chip">Youth Worship</div>
+                <div class="category-chip">Testimonials</div>
+            </div>
+        </section>
+
+        <!-- Sermon Feed -->
+        <section class="section animate-in" style="animation-delay: 0.1s;">
+            <div class="media-grid">
+                <!-- Video Item 1 (Direct Live) -->
+                <a href="https://www.youtube.com/live/HOuTe90NEeQ?si=F1ukJE8x7cCChK3N" target="_blank"
+                    style="text-decoration: none; color: inherit;">
+                    <div class="glass media-card animate-in">
+                        <img src="https://img.youtube.com/vi/HOuTe90NEeQ/maxresdefault.jpg" alt="Sermon thumbnail">
+                        <div class="play-overlay">
+                            <i class="fa-solid fa-play"></i>
+                        </div>
+                        <div class="media-info">
+                            <h4 class="serif">Recent Live Broadcast</h4>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">Watch Full Service</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Video Item 2 -->
+                <a href="https://www.youtube.com/watch?v=Fj7n0_6p8yA" target="_blank"
+                    style="text-decoration: none; color: inherit;">
+                    <div class="glass media-card animate-in" style="animation-delay: 0.1s;">
+                        <img src="https://img.youtube.com/vi/Fj7n0_6p8yA/maxresdefault.jpg" alt="Sermon thumbnail">
+                        <div class="play-overlay">
+                            <i class="fa-solid fa-play"></i>
+                        </div>
+                        <div class="media-info">
+                            <h4 class="serif">Special Prayer Meeting</h4>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">Worship & Word</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Video Item 3 -->
+                <a href="https://www.youtube.com/watch?v=6mP9Zc6xV4Y" target="_blank"
+                    style="text-decoration: none; color: inherit;">
+                    <div class="glass media-card animate-in" style="animation-delay: 0.2s;">
+                        <img src="https://img.youtube.com/vi/6mP9Zc6xV4Y/maxresdefault.jpg" alt="Sermon thumbnail">
+                        <div class="play-overlay">
+                            <i class="fa-solid fa-play"></i>
+                        </div>
+                        <div class="media-info">
+                            <h4 class="serif">Sunday Morning Worship</h4>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">Agape Gospel Ministries</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Visit YouTube CTA -->
+                <div style="padding: 10px 0;">
+                    <a href="https://youtube.com/@agapegospelministries2003?si=8IHO6zC2QKy3QpI7" target="_blank"
+                        class="btn"
+                        style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #FF0000; color: white;">
+                        <i class="fa-brands fa-youtube" style="font-size: 1.5rem;"></i> Explore More on YouTube
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Navigation -->
+        <nav class="glass bottom-nav">
+            <a href="sermons.html" class="nav-item active">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Sermons</span>
+            </a>
+            <a href="events.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Events</span>
+            </a>
+            <a href="index.html" class="nav-item home-item">
+                <div class="home-circle">
+                    <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
+                </div>
+                <span>Home</span>
+            </a>
+            <a href="bible.html" class="nav-item">
+                <i class="fa-solid fa-bible"></i>
+                <span>Bible</span>
+            </a>
+            <a href="prayer.html" class="nav-item">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Prayer</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Simple chip selection logic
+        document.querySelectorAll('.category-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>
