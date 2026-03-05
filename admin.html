@@ -254,12 +254,17 @@
                     Add Song</button>
             </div>
             <div id="sermonForm" class="admin-form" style="margin-bottom: 30px;">
-                <h3>Song Detail</h3>
+                <h3 id="sermonFormTitle">Add New Song</h3>
+                <input type="hidden" id="sermonId">
                 <input type="text" id="sermonTitle" placeholder="Song Title" class="input-field">
-                <textarea id="sermonSpeaker" placeholder="Song details / Artist" class="input-field"
-                    style="height: 80px; padding: 15px;"></textarea>
+                <textarea id="sermonSpeaker" placeholder="Song details / Artist / Lyrics" class="input-field"
+                    style="height: 120px; padding: 15px;"></textarea>
                 <input type="text" id="sermonVideoUrl" placeholder="YouTube URL" class="input-field">
-                <button onclick="addSermon()" class="btn">Add to Song List</button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="saveSermon()" class="btn" id="sermonSubmitBtn">Add to Song List</button>
+                    <button onclick="cancelEdit('sermon')" class="btn"
+                        style="background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2);">Cancel</button>
+                </div>
             </div>
             <div id="sermonsList" style="margin-top: 40px; display: flex; flex-direction: column; gap: 20px;"></div>
         </div>
@@ -374,8 +379,9 @@
             data.forEach(item => {
                 list.innerHTML += `
                     <div class="admin-card">
-                        <b>${item.title}</b><br><small>${item.date} at ${item.time}</small>
+                        <b>${item.title}</b><br><small>${item.date || ''} at ${item.time || ''}</small>
                         <div class="controls">
+                            <button onclick='editEvent(${JSON.stringify(item).replace(/'/g, "&apos;")})' class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
                             <button onclick="deleteItem('events', ${item.id})" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Delete</button>
                         </div>
                     </div>
@@ -383,20 +389,53 @@
             });
         }
 
+        function editEvent(event) {
+            document.getElementById('eventId').value = event.id;
+            document.getElementById('eventTitle').value = event.title;
+            document.getElementById('eventDate').value = event.date;
+            document.getElementById('eventTime').value = event.time;
+            document.getElementById('eventLocation').value = event.location;
+            document.getElementById('eventForm').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         async function saveEvent() {
+            const id = document.getElementById('eventId').value;
             const data = {
                 title: document.getElementById('eventTitle').value,
                 date: document.getElementById('eventDate').value,
                 time: document.getElementById('eventTime').value,
                 location: document.getElementById('eventLocation').value
             };
-            await fetch(`${API}/events`, {
-                method: 'POST',
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API}/events/${id}` : `${API}/events`;
+
+            await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            cancelEdit('event');
             loadEvents();
-            toggleForm('eventForm');
+        }
+
+        function cancelEdit(type) {
+            if (type === 'event') {
+                document.getElementById('eventId').value = '';
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventDate').value = '';
+                document.getElementById('eventTime').value = '';
+                document.getElementById('eventLocation').value = '';
+                document.getElementById('eventForm').classList.remove('active');
+            } else {
+                document.getElementById('sermonId').value = '';
+                document.getElementById('sermonTitle').value = '';
+                document.getElementById('sermonSpeaker').value = '';
+                document.getElementById('sermonVideoUrl').value = '';
+                document.getElementById('sermonFormTitle').innerText = 'Add New Song';
+                document.getElementById('sermonSubmitBtn').innerText = 'Add to Song List';
+                document.getElementById('sermonForm').classList.remove('active');
+            }
         }
 
         // SERMONS
@@ -414,6 +453,7 @@
                             <small style="opacity: 0.7;">${briefInfo}</small>
                         </div>
                         <div class="controls">
+                            <button onclick='editSermon(${JSON.stringify(item).replace(/'/g, "&apos;")})' class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
                             <button onclick="deleteItem('sermons', ${item.id})" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Remove</button>
                         </div>
                     </div>
@@ -452,11 +492,22 @@
             return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
         }
 
-        async function addSermon() {
+        function editSermon(song) {
+            document.getElementById('sermonId').value = song.id;
+            document.getElementById('sermonTitle').value = song.title;
+            document.getElementById('sermonSpeaker').value = song.speaker;
+            document.getElementById('sermonVideoUrl').value = song.video_url;
+            document.getElementById('sermonFormTitle').innerText = 'Edit Song';
+            document.getElementById('sermonSubmitBtn').innerText = 'Update Song';
+            document.getElementById('sermonForm').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveSermon() {
+            const id = document.getElementById('sermonId').value;
             const videoUrl = document.getElementById('sermonVideoUrl').value;
             let videoId = '';
 
-            // Extract Video ID for Auto-Thumbnail
             if (videoUrl.includes('v=')) {
                 videoId = videoUrl.split('v=')[1].split('&')[0];
             } else if (videoUrl.includes('youtu.be/')) {
@@ -474,13 +525,17 @@
                 thumbnail_url: thumbnail,
                 category: 'Sunday'
             };
-            await fetch(`${API}/sermons`, {
-                method: 'POST',
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API}/sermons/${id}` : `${API}/sermons`;
+
+            await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            cancelEdit('sermon');
             loadSermons();
-            toggleForm('sermonForm');
         }
 
         // PRAYERS

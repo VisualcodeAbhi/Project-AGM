@@ -102,10 +102,19 @@ app.post('/api/events', (req, res) => {
 });
 
 app.delete('/api/events/:id', (req, res) => {
-    db.run(`DELETE FROM events WHERE id = ?`, [req.params.id], function(err) {
+    db.run(`DELETE FROM events WHERE id = ?`, [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
+});
+
+app.put('/api/events/:id', (req, res) => {
+    const { title, date, time, location } = req.body;
+    db.run(`UPDATE events SET title = ?, date = ?, time = ?, location = ? WHERE id = ?`,
+        [title, date, time, location, req.params.id], function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        });
 });
 
 // --- Sermons ---
@@ -126,10 +135,19 @@ app.post('/api/sermons', (req, res) => {
 });
 
 app.delete('/api/sermons/:id', (req, res) => {
-    db.run(`DELETE FROM sermons WHERE id = ?`, [req.params.id], function(err) {
+    db.run(`DELETE FROM sermons WHERE id = ?`, [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
+});
+
+app.put('/api/sermons/:id', (req, res) => {
+    const { title, speaker, video_url, thumbnail_url, category } = req.body;
+    db.run(`UPDATE sermons SET title = ?, speaker = ?, video_url = ?, thumbnail_url = ?, category = ? WHERE id = ?`,
+        [title, speaker, video_url, thumbnail_url, category, req.params.id], function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        });
 });
 
 // --- Prayers ---

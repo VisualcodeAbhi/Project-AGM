@@ -162,8 +162,9 @@
 
     <script src="app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        try {
             const res = await fetch('https://agm-khbc.onrender.com/api/settings');
+            if (!res.ok) throw new Error('Failed to fetch settings');
             const s = await res.json();
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
@@ -181,8 +182,15 @@
                 addEditOverlay('mission_statement', 'mission_statement');
                 addEditOverlay('location_name', 'location_name');
                 addEditOverlay('verseImage', 'daily_verse_img', true);
+                addEditOverlay('live_thumb', 'live_thumbnail', true);
+                addEditOverlay('church_name_banner', 'church_name');
             }
-        });
+        } catch (error) {
+            console.error('Settings load failed:', error);
+            // Even if fetch fails, check if we're admin to show the bar/exit
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+            if (isAdmin) document.body.style.paddingTop = '40px';
+        }
 
         function addEditOverlay(elementId, settingKey, isImage = false) {
             const el = document.getElementById(elementId);
