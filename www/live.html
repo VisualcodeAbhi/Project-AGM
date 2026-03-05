@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live Service - Agape Gospel Ministries</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="section" style="padding-top: 40px; text-align: center; position: relative;">
+            <a href="index.html"
+                style="position: absolute; left: 25px; top: 45px; color: white; text-decoration: none; font-size: 1.2rem;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <h1 class="serif" style="color: var(--primary-gold); font-size: 1.8rem;">Live</h1>
+        </header>
+
+        <!-- Live Content -->
+        <section class="section animate-in" style="text-align: center; padding-top: 30px;">
+            <p id="live_church_name"
+                style="color: var(--primary-gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 5px;">...</p>
+            <p
+                style="color: #ff4757; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span
+                    style="width: 8px; height: 8px; background: #ff4757; border-radius: 50%; display: inline-block;"></span>
+                LIVE SERVICE
+                <span
+                    style="width: 8px; height: 8px; background: #ff4757; border-radius: 50%; display: inline-block;"></span>
+            </p>
+
+            <div class="glass" style="margin-top: 30px; border-radius: 25px; overflow: hidden; aspect-ratio: 16/9;">
+                <iframe id="live_iframe" width="100%" height="100%" src="" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <a id="watch_on_youtube_btn" href="https://youtube.com/@agapegospelministries2003" target="_blank"
+                    class="btn"
+                    style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; width: auto; background: #FF0000; color: white;">
+                    <i class="fa-brands fa-youtube"></i> Watch on YouTube Live
+                </a>
+            </div>
+        </section>
+
+        <script>
+            function getYouTubeEmbedUrl(url) {
+                if (!url) return '';
+                if (url.includes('/embed/')) return url;
+
+                let videoId = '';
+                if (url.includes('v=')) {
+                    videoId = url.split('v=')[1].split('&')[0];
+                } else if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0];
+                } else if (url.includes('/live/')) {
+                    videoId = url.split('/live/')[1].split('?')[0];
+                }
+
+                if (videoId) {
+                    // Remove any trailing slashes
+                    videoId = videoId.replace('/', '');
+                    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                }
+                return url;
+            }
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                const res = await fetch('https://agm-khbc.onrender.com/api/settings');
+                const s = await res.json();
+                document.getElementById('live_church_name').innerText = (s.church_name || 'AGAPE GOSPEL MINISTRIES').toUpperCase();
+
+                if (s.live_video_url) {
+                    const embedUrl = getYouTubeEmbedUrl(s.live_video_url);
+                    document.getElementById('live_iframe').src = embedUrl;
+                    document.getElementById('watch_on_youtube_btn').href = s.live_video_url;
+                }
+            });
+        </script>
+
+        <!-- Bottom Navigation -->
+        <nav class="glass bottom-nav">
+            <a href="songs.html" class="nav-item">
+                <i class="fa-solid fa-music"></i>
+                <span>Songs</span>
+            </a>
+            <a href="events.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Events</span>
+            </a>
+            <a href="index.html" class="nav-item home-item">
+                <div class="home-circle">
+                    <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
+                </div>
+                <span></span>
+            </a>
+            <a href="bible.html" class="nav-item">
+                <i class="fa-solid fa-bible"></i>
+                <span>Bible</span>
+            </a>
+            <a href="prayer.html" class="nav-item">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Prayer</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

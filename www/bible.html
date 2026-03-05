@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Holy Bible - Agape Gospel Ministries</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: var(--primary-gold);
+        }
+
+        .chapter-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .chapter-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chapter-card:hover {
+            background: var(--primary-gold);
+            color: var(--primary-dark);
+        }
+
+        #bible-container {
+            min-height: 300px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: var(--primary-gold);
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="section" style="padding-top: 40px; text-align: center;">
+            <div style="width: 60px; height: 60px; background: transparent; margin: 0 auto 10px;">
+                <img src="assets/church-logo.png" alt="Logo" style="width: 100%; height: auto;">
+            </div>
+            <h1 class="serif" style="color: var(--primary-gold); font-size: 1.8rem;">Holy Bible</h1>
+        </header>
+
+        <!-- Dynamic Bible Search & Content -->
+        <section class="section animate-in">
+            <div id="bible-navigation" class="breadcrumb" style="display: none;">
+                <span onclick="loadBooks()">Books</span>
+                <span id="breadcrumb-book" style="display: none;"></span>
+            </div>
+
+            <div id="bible-container">
+                <div class="testament-tabs" id="testament-tabs">
+                    <div class="testament-tab active" onclick="filterBooks('OT')">Old Testament</div>
+                    <div class="testament-tab" onclick="filterBooks('NT')">New Testament</div>
+                </div>
+
+                <div id="book-list" class="book-grid">
+                    <!-- Books will be injected here -->
+                </div>
+
+                <div id="chapter-list" style="display: none;">
+                    <h2 id="selected-book-title" class="serif" style="color: var(--primary-gold); margin-bottom: 20px;">
+                    </h2>
+                    <div class="chapter-grid" id="chapters-container">
+                        <!-- Chapters will be injected here -->
+                    </div>
+                </div>
+
+                <div id="verse-list" style="display: none;">
+                    <div class="glass" style="padding: 20px;">
+                        <h2 id="reading-title" class="serif"
+                            style="color: var(--primary-gold); margin-bottom: 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">
+                        </h2>
+                        <div id="verses-content" class="verse-view">
+                            <!-- Verses will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="loader" class="loading-spinner">
+                    <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+                    <p style="margin-top: 10px;">Heavenly words loading...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Navigation -->
+        <nav class="glass bottom-nav">
+            <a href="songs.html" class="nav-item">
+                <i class="fa-solid fa-music"></i>
+                <span>Songs</span>
+            </a>
+            <a href="events.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Events</span>
+            </a>
+            <a href="index.html" class="nav-item home-item">
+                <div class="home-circle">
+                    <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
+                </div>
+                <span></span>
+            </a>
+            <a href="bible.html" class="nav-item active">
+                <i class="fa-solid fa-bible"></i>
+                <span>Bible</span>
+            </a>
+            <a href="prayer.html" class="nav-item">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Prayer</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        const bibleData = {
+            OT: [
+                { name: "Genesis", chapters: 50 }, { name: "Exodus", chapters: 40 }, { name: "Leviticus", chapters: 27 },
+                { name: "Numbers", chapters: 36 }, { name: "Deuteronomy", chapters: 34 }, { name: "Joshua", chapters: 24 },
+                { name: "Judges", chapters: 21 }, { name: "Ruth", chapters: 4 }, { name: "1 Samuel", chapters: 31 },
+                { name: "2 Samuel", chapters: 24 }, { name: "1 Kings", chapters: 22 }, { name: "2 Kings", chapters: 25 },
+                { name: "1 Chronicles", chapters: 29 }, { name: "2 Chronicles", chapters: 36 }, { name: "Ezra", chapters: 10 },
+                { name: "Nehemiah", chapters: 13 }, { name: "Esther", chapters: 10 }, { name: "Job", chapters: 42 },
+                { name: "Psalms", chapters: 150 }, { name: "Proverbs", chapters: 31 }, { name: "Ecclesiastes", chapters: 12 },
+                { name: "Song of Solomon", chapters: 8 }, { name: "Isaiah", chapters: 66 }, { name: "Jeremiah", chapters: 52 },
+                { name: "Lamentations", chapters: 5 }, { name: "Ezekiel", chapters: 48 }, { name: "Daniel", chapters: 12 },
+                { name: "Hosea", chapters: 14 }, { name: "Joel", chapters: 3 }, { name: "Amos", chapters: 9 },
+                { name: "Obadiah", chapters: 1 }, { name: "Jonah", chapters: 4 }, { name: "Micah", chapters: 7 },
+                { name: "Nahum", chapters: 3 }, { name: "Habakkuk", chapters: 3 }, { name: "Zephaniah", chapters: 3 },
+                { name: "Haggai", chapters: 2 }, { name: "Zechariah", chapters: 14 }, { name: "Malachi", chapters: 4 }
+            ],
+            NT: [
+                { name: "Matthew", chapters: 28 }, { name: "Mark", chapters: 16 }, { name: "Luke", chapters: 24 },
+                { name: "John", chapters: 21 }, { name: "Acts", chapters: 28 }, { name: "Romans", chapters: 16 },
+                { name: "1 Corinthians", chapters: 16 }, { name: "2 Corinthians", chapters: 13 }, { name: "Galatians", chapters: 6 },
+                { name: "Ephesians", chapters: 6 }, { name: "Philippians", chapters: 4 }, { name: "Colossians", chapters: 4 },
+                { name: "1 Thessalonians", chapters: 5 }, { name: "2 Thessalonians", chapters: 3 }, { name: "1 Timothy", chapters: 6 },
+                { name: "2 Timothy", chapters: 4 }, { name: "Titus", chapters: 3 }, { name: "Philemon", chapters: 1 },
+                { name: "Hebrews", chapters: 13 }, { name: "James", chapters: 5 }, { name: "1 Peter", chapters: 5 },
+                { name: "2 Peter", chapters: 3 }, { name: "1 John", chapters: 5 }, { name: "2 John", chapters: 1 },
+                { name: "3 John", chapters: 1 }, { name: "Jude", chapters: 1 }, { name: "Revelation", chapters: 22 }
+            ]
+        };
+
+        let currentBook = '';
+
+        function filterBooks(type) {
+            const list = document.getElementById('book-list');
+            list.innerHTML = '';
+            document.querySelectorAll('.testament-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            bibleData[type].forEach(book => {
+                const card = document.createElement('div');
+                card.className = 'book-card';
+                card.innerText = book.name;
+                card.onclick = () => loadChapters(book);
+                list.appendChild(card);
+            });
+        }
+
+        function loadBooks() {
+            document.getElementById('book-list').style.display = 'grid';
+            document.getElementById('testament-tabs').style.display = 'flex';
+            document.getElementById('chapter-list').style.display = 'none';
+            document.getElementById('verse-list').style.display = 'none';
+            document.getElementById('bible-navigation').style.display = 'none';
+        }
+
+        function loadChapters(book) {
+            currentBook = book.name;
+            document.getElementById('book-list').style.display = 'none';
+            document.getElementById('testament-tabs').style.display = 'none';
+            document.getElementById('chapter-list').style.display = 'block';
+            document.getElementById('selected-book-title').innerText = book.name;
+
+            const container = document.getElementById('chapters-container');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= book.chapters; i++) {
+                const card = document.createElement('div');
+                card.className = 'chapter-card';
+                card.innerText = i;
+                card.onclick = () => loadVerses(book.name, i);
+                container.appendChild(card);
+            }
+
+            document.getElementById('bible-navigation').style.display = 'flex';
+            document.getElementById('breadcrumb-book').style.display = 'inline';
+            document.getElementById('breadcrumb-book').innerText = ' > ' + book.name;
+            document.getElementById('breadcrumb-book').onclick = () => loadChapters(book);
+        }
+
+        async function loadVerses(book, chapter) {
+            document.getElementById('chapter-list').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+
+            try {
+                const response = await fetch(`https://bible-api.com/${book}+${chapter}`);
+                const data = await response.json();
+
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('verse-list').style.display = 'block';
+                document.getElementById('reading-title').innerText = `${book} ${chapter}`;
+
+                const content = document.getElementById('verses-content');
+                content.innerHTML = data.verses.map(v =>
+                    `<p><span class="verse-num">${v.verse}</span> ${v.text}</p>`
+                ).join('');
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                alert('Connection error. Please check your internet to load the Bible.');
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('chapter-list').style.display = 'block';
+            }
+        }
+
+        // Initialize with OT
+        filterBooks('OT');
+    </script>
+</body>
+
+</html>
