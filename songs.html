@@ -74,7 +74,7 @@
 
             async function loadSongs() {
                 try {
-                    const res = await fetch('http://192.168.1.3:3000/api/sermons');
+                    const res = await fetch('https://agm-khbc.onrender.com/api/sermons');
                     allSongs = await res.json();
                     renderSongs();
                 } catch (error) {
@@ -159,7 +159,7 @@
 
             async function deleteSongNow(id) {
                 if (!confirm('Delete this song from the book?')) return;
-                await fetch(`http://localhost:3000/api/sermons/${id}`, { method: 'DELETE' });
+                await fetch(`https://agm-khbc.onrender.com/api/sermons/${id}`, { method: 'DELETE' });
                 loadSongs();
             }
         </script>

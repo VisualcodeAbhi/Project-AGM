@@ -46,11 +46,11 @@
 
             async function loadPublicEvents() {
                 try {
-                    const res = await fetch('http://192.168.1.3:3000/api/settings');
+                    const res = await fetch('https://agm-khbc.onrender.com/api/settings');
                     const s = await res.json();
                     document.querySelectorAll('.app-title-dynamic').forEach(el => el.innerText = s.church_name);
 
-                    const eventRes = await fetch('http://192.168.1.3:3000/api/events');
+                    const eventRes = await fetch('https://agm-khbc.onrender.com/api/events');
                     const events = await eventRes.json();
                     const container = document.getElementById('eventsContainer');
                     const isAdmin = localStorage.getItem('isAdmin') === 'true';

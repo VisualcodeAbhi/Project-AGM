@@ -188,7 +188,7 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', async () => {
-                const res = await fetch('http://192.168.1.3:3000/api/settings');
+                const res = await fetch('https://agm-khbc.onrender.com/api/settings');
                 const s = await res.json();
                 // Dynamically update the phone/email fields if they exist
                 document.querySelectorAll('.info-card-full p').forEach(p => {

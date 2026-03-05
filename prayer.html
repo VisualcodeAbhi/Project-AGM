@@ -98,7 +98,7 @@
 
         async function loadPrayers() {
             try {
-                const response = await fetch('http://192.168.1.3:3000/api/prayers');
+                const response = await fetch('https://agm-khbc.onrender.com/api/prayers');
                 const prayers = await response.json();
                 const container = document.getElementById('prayerContainer');
                 document.getElementById('prayerCount').innerText = `${prayers.length} Active`;
@@ -133,7 +133,7 @@
             const request = document.getElementById('prayerRequest').value;
             if (!request) return;
 
-            const res = await fetch('http://localhost:3000/api/prayers', {
+            const res = await fetch('https://agm-khbc.onrender.com/api/prayers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userName: name, request })

@@ -59,7 +59,7 @@ const db = new sqlite3.Database('./prayers.db', (err) => {
 // --- Upload Route ---
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const fileUrl = `http://192.168.1.3:3000/uploads/${req.file.filename}`;
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     res.json({ url: fileUrl });
 });
 
@@ -164,5 +164,5 @@ app.delete('/api/prayers/:id', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on http://192.168.1.3:${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
