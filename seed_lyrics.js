@@ -20,7 +20,7 @@ const lyrics = `అద్వితీయుడా (Adviteeyuda)
 తడి కన్నులనే తుడిచిన నేస్తం ఇలలో నీవే కదా! యేసయ్యా`;
 
 async function updateLyrics() {
-    const res = await fetch('http://localhost:3000/api/sermons');
+    const res = await fetch('https://agm-khbc.onrender.com/api/sermons');
     const songs = await res.json();
     const target = songs.find(s => s.title.includes('అద్వితీయుడా'));
     
@@ -37,10 +37,10 @@ async function updateLyrics() {
 
 // Better approach: Just delete all and re-add with full lyrics for the first one.
 async function reSeed() {
-    const songsRes = await fetch('http://localhost:3000/api/sermons');
+    const songsRes = await fetch('https://agm-khbc.onrender.com/api/sermons');
     const all = await songsRes.json();
     for (const s of all) {
-        await fetch(`http://localhost:3000/api/sermons/${s.id}`, { method: 'DELETE' });
+        await fetch(`https://agm-khbc.onrender.com/api/sermons/${s.id}`, { method: 'DELETE' });
     }
 
     const newSongs = [
@@ -54,7 +54,7 @@ async function reSeed() {
     ];
 
     for (const song of newSongs) {
-        await fetch('http://localhost:3000/api/sermons', {
+        await fetch('https://agm-khbc.onrender.com/api/sermons', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(song)

@@ -210,7 +210,7 @@
                         input.onchange = async () => {
                             const formData = new FormData();
                             formData.append('image', input.files[0]);
-                            const uploadRes = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+                            const uploadRes = await fetch('https://agm-khbc.onrender.com/api/upload', { method: 'POST', body: formData });
                             const uploadData = await uploadRes.json();
                             if (uploadData.url) updateSetting(settingKey, uploadData.url);
                         };
@@ -229,7 +229,7 @@
 
         async function updateSetting(key, value) {
             const data = {}; data[key] = value;
-            await fetch('http://localhost:3000/api/settings', {
+            await fetch('https://agm-khbc.onrender.com/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

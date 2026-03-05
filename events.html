@@ -145,7 +145,7 @@
 
             async function deleteEventNow(id) {
                 if (!confirm('Delete this event?')) return;
-                await fetch(`http://localhost:3000/api/events/${id}`, { method: 'DELETE' });
+                await fetch(`https://agm-khbc.onrender.com/api/events/${id}`, { method: 'DELETE' });
                 window.location.reload();
             }
         </script>

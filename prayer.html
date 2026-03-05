@@ -150,7 +150,7 @@
 
         async function deletePrayer(id) {
             if (!confirm('Delete your prayer request?')) return;
-            await fetch(`http://localhost:3000/api/prayers/${id}`, { method: 'DELETE' });
+            await fetch(`https://agm-khbc.onrender.com/api/prayers/${id}`, { method: 'DELETE' });
             localStorage.removeItem(`my_prayer_${id}`);
             loadPrayers();
         }
@@ -158,7 +158,7 @@
         async function editPrayer(id, currentText) {
             const newText = prompt('Update your prayer:', currentText);
             if (!newText || newText === currentText) return;
-            await fetch(`http://localhost:3000/api/prayers/${id}`, {
+            await fetch(`https://agm-khbc.onrender.com/api/prayers/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ request: newText })
