@@ -23,6 +23,9 @@ const upload = multer({ storage: storage });
 
 // Middleware
 app.use(cors());
+
+// Health check
+app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 app.use(express.json());
 app.use('/uploads', express.static(uploadDir));
 app.use(express.static(path.join(__dirname, '')));

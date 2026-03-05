@@ -301,12 +301,21 @@
     <script>
         const API = 'https://agm-khbc.onrender.com/api';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
-            loadEvents();
-            loadSermons();
-            loadPrayers();
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("Admin Dashboard Initializing...");
+            initDashboard();
         });
+
+        async function initDashboard() {
+            const loaders = [loadSettings(), loadEvents(), loadSermons(), loadPrayers()];
+            try {
+                await Promise.all(loaders);
+                console.log("All data loaded successfully");
+            } catch (err) {
+                console.error("Dashboard init failed:", err);
+                alert("Alert: Some data failed to load. The backend might be starting up. Please refresh in a few seconds.\nError: " + err.message);
+            }
+        }
 
         function showTab(tabId) {
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
@@ -321,15 +330,26 @@
 
         // SETTINGS
         async function loadSettings() {
-            const res = await fetch(`${API}/settings`);
-            const s = await res.json();
-            for (const key in s) {
-                const el = document.getElementById('set_' + key);
-                if (el) el.value = s[key];
+            try {
+                const res = await fetch(`${API}/settings`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const s = await res.json();
+                for (const key in s) {
+                    const el = document.getElementById('set_' + key);
+                    if (el) el.value = s[key];
+                }
+            } catch (e) {
+                console.error("Settings load failed", e);
+                throw e;
             }
         }
 
         async function saveGlobalSettings() {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
             const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'live_thumbnail', 'daily_verse_img'];
             const data = {};
             keys.forEach(k => {
@@ -337,12 +357,24 @@
                 if (el) data[k] = el.value;
             });
 
-            const res = await fetch(`${API}/settings`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if (res.ok) alert('All App Core details updated successfully!');
+            try {
+                const res = await fetch(`${API}/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    alert('All App Core details updated successfully!');
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || `Server returned ${res.status}`);
+                }
+            } catch (err) {
+                alert('Save failed: ' + err.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
 
         // File Browse Helper
@@ -371,22 +403,33 @@
         }
 
         // EVENTS
+        let eventsData = [];
         async function loadEvents() {
-            const res = await fetch(`${API}/events`);
-            const data = await res.json();
-            const list = document.getElementById('eventsList');
-            list.innerHTML = '';
-            data.forEach(item => {
-                list.innerHTML += `
-                    <div class="admin-card">
-                        <b>${item.title}</b><br><small>${item.date || ''} at ${item.time || ''}</small>
-                        <div class="controls">
-                            <button onclick='editEvent(${JSON.stringify(item).replace(/'/g, "&apos;")})' class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
-                            <button onclick="deleteItem('events', ${item.id})" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Delete</button>
+            try {
+                const res = await fetch(`${API}/events`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                eventsData = await res.json();
+                const list = document.getElementById('eventsList');
+                list.innerHTML = '';
+                eventsData.forEach((item, index) => {
+                    list.innerHTML += `
+                        <div class="admin-card">
+                            <b>${item.title}</b><br><small>${item.date || ''} at ${item.time || ''}</small>
+                            <div class="controls">
+                                <button onclick="triggerEditEvent(${index})" class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="deleteItem('events', ${item.id})" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Delete</button>
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            } catch (e) {
+                console.error("Events load failed", e);
+                throw e;
+            }
+        }
+
+        function triggerEditEvent(index) {
+            editEvent(eventsData[index]);
         }
 
         function editEvent(event) {
@@ -439,26 +482,41 @@
         }
 
         // SERMONS
+        let songsData = [];
         async function loadSermons() {
-            const res = await fetch(`${API}/sermons`);
-            const data = await res.json();
-            const list = document.getElementById('sermonsList');
-            list.innerHTML = '';
-            data.forEach(item => {
-                const briefInfo = item.speaker.split('\n')[0];
-                list.innerHTML += `
-                    <div class="admin-card">
-                        <div onclick='showLyrics(${JSON.stringify(item).replace(/'/g, "&apos;")})' style="cursor: pointer;">
-                            <b style="color: var(--primary-gold); font-size: 1.1rem;">${item.title}</b><br>
-                            <small style="opacity: 0.7;">${briefInfo}</small>
+            try {
+                const res = await fetch(`${API}/sermons`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                songsData = await res.json();
+                const list = document.getElementById('sermonsList');
+                list.innerHTML = '';
+                songsData.forEach((item, index) => {
+                    const briefInfo = item.speaker.split('\n')[0];
+                    list.innerHTML += `
+                        <div class="admin-card">
+                            <div onclick="showLyricsByIndex(${index})" style="cursor: pointer;">
+                                <b style="color: var(--primary-gold); font-size: 1.1rem;">${item.title}</b><br>
+                                <small style="opacity: 0.7;">${briefInfo}</small>
+                            </div>
+                            <div class="controls">
+                                <button onclick="triggerEditSermon(${index})" class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="deleteItem('sermons', ${item.id})" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Remove</button>
+                            </div>
                         </div>
-                        <div class="controls">
-                            <button onclick='editSermon(${JSON.stringify(item).replace(/'/g, "&apos;")})' class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
-                            <button onclick="deleteItem('sermons', ${item.id})" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Remove</button>
-                        </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            } catch (e) {
+                console.error("Sermons load failed", e);
+                throw e;
+            }
+        }
+
+        function triggerEditSermon(index) {
+            editSermon(songsData[index]);
+        }
+
+        function showLyricsByIndex(index) {
+            showLyrics(songsData[index]);
         }
 
         function showLyrics(song) {
