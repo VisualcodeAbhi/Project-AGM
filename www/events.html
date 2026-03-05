@@ -46,11 +46,11 @@
 
             async function loadPublicEvents() {
                 try {
-                    const res = await fetch('https://agm-khbc.onrender.com/api/settings');
+                    const res = await fetch('https://project-agm.onrender.com/api/settings');
                     const s = await res.json();
                     document.querySelectorAll('.app-title-dynamic').forEach(el => el.innerText = s.church_name);
 
-                    const eventRes = await fetch('https://agm-khbc.onrender.com/api/events');
+                    const eventRes = await fetch('https://project-agm.onrender.com/api/events');
                     const events = await eventRes.json();
                     const container = document.getElementById('eventsContainer');
                     const isAdmin = localStorage.getItem('isAdmin') === 'true';
@@ -145,7 +145,7 @@
 
             async function deleteEventNow(id) {
                 if (!confirm('Delete this event?')) return;
-                await fetch(`https://agm-khbc.onrender.com/api/events/${id}`, { method: 'DELETE' });
+                await fetch(`https://project-agm.onrender.com/api/events/${id}`, { method: 'DELETE' });
                 window.location.reload();
             }
         </script>

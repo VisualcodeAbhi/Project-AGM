@@ -1,6 +1,6 @@
 // const fetch = require('node-fetch'); // Node v18+ doesn't need this
 
-const API = 'https://agm-khbc.onrender.com/api/sermons';
+const API = 'https://project-agm.onrender.com/api/sermons';
 
 const songs = [
     {

@@ -163,7 +163,7 @@
     <script src="app.js"></script>
     <script>
         try {
-            const res = await fetch('https://agm-khbc.onrender.com/api/settings');
+            const res = await fetch('https://project-agm.onrender.com/api/settings');
             if (!res.ok) throw new Error('Failed to fetch settings');
             const s = await res.json();
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
@@ -218,7 +218,7 @@
                         input.onchange = async () => {
                             const formData = new FormData();
                             formData.append('image', input.files[0]);
-                            const uploadRes = await fetch('https://agm-khbc.onrender.com/api/upload', { method: 'POST', body: formData });
+                            const uploadRes = await fetch('https://project-agm.onrender.com/api/upload', { method: 'POST', body: formData });
                             const uploadData = await uploadRes.json();
                             if (uploadData.url) updateSetting(settingKey, uploadData.url);
                         };
@@ -237,7 +237,7 @@
 
         async function updateSetting(key, value) {
             const data = {}; data[key] = value;
-            await fetch('https://agm-khbc.onrender.com/api/settings', {
+            await fetch('https://project-agm.onrender.com/api/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

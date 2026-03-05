@@ -72,7 +72,7 @@
             }
 
             document.addEventListener('DOMContentLoaded', async () => {
-                const res = await fetch('https://agm-khbc.onrender.com/api/settings');
+                const res = await fetch('https://project-agm.onrender.com/api/settings');
                 const s = await res.json();
                 document.getElementById('live_church_name').innerText = (s.church_name || 'AGAPE GOSPEL MINISTRIES').toUpperCase();
 
