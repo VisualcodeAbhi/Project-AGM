@@ -7,6 +7,12 @@
     <title>Agape Gospel Ministries</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
 </head>
 
 <body>
@@ -19,13 +25,14 @@
                 style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 15px;">
                 <div style="flex: 1;">
                     <p style="text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">Welcome to</p>
-                    <h1 class="serif"
+                    <h1 class="serif" id="church_name"
                         style="color: var(--primary-gold); font-size: 2.2rem; line-height: 1.1; margin-bottom: 5px; text-shadow: 2px 2px 10px rgba(0,0,0,0.7);">
                         Agape Gospel Ministries</h1>
                     <a href="contact.html" style="text-decoration: none; color: inherit;">
-                        <p style="margin-top: 5px;"><i class="fa-solid fa-location-dot"></i> Takkellapadu</p>
+                        <p id="location_name" style="margin-top: 5px;"><i class="fa-solid fa-location-dot"></i>
+                            Takkellapadu</p>
                     </a>
-                    <p
+                    <p id="mission_statement"
                         style="font-style: italic; margin-top: 8px; opacity: 0.9; text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">
                         "Walking in Faith since 2003"</p>
                 </div>
@@ -58,8 +65,8 @@
             </div>
             <a href="live.html" style="text-decoration: none; color: inherit;">
                 <div class="glass media-card animate-in" style="height: 250px;">
-                    <img src="https://img.youtube.com/vi/HOuTe90NEeQ/maxresdefault.jpg" alt="Latest Service"
-                        style="width: 100%; height: 100%; object-fit: cover;">
+                    <img id="live_thumb" src="https://img.youtube.com/vi/HOuTe90NEeQ/maxresdefault.jpg"
+                        alt="Latest Service" style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="play-overlay" style="opacity: 1;">
                         <i class="fa-solid fa-play"></i>
                     </div>
@@ -67,7 +74,7 @@
                         <span class="badge" style="background: #ff4757; color: white;">LIVE SOON</span>
                     </div>
                     <div class="media-info">
-                        <h3 class="serif" style="font-size: 1.4rem;">The Power of Grace</h3>
+                        <h3 id="church_name_banner" class="serif" style="font-size: 1.4rem;">The Power of Grace</h3>
                         <p style="font-size: 0.9rem; opacity: 0.8;">Sunday Service • Watch Previous Live</p>
                     </div>
                 </div>
@@ -116,11 +123,10 @@
             </div>
         </section>
 
-        <!-- Bottom Navigation -->
         <nav class="glass bottom-nav">
-            <a href="sermons.html" class="nav-item">
-                <i class="fa-solid fa-book-open"></i>
-                <span>Sermons</span>
+            <a href="songs.html" class="nav-item">
+                <i class="fa-solid fa-music"></i>
+                <span>Songs</span>
             </a>
             <a href="events.html" class="nav-item">
                 <i class="fa-solid fa-calendar-days"></i>
@@ -130,6 +136,7 @@
                 <div class="home-circle">
                     <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
                 </div>
+                <span></span>
             </a>
             <a href="bible.html" class="nav-item">
                 <i class="fa-solid fa-bible"></i>
@@ -154,6 +161,82 @@
     </div>
 
     <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const res = await fetch('http://192.168.1.3:3000/api/settings');
+            const s = await res.json();
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+            if (s.church_name) {
+                document.getElementById('church_name').innerText = s.church_name;
+                document.getElementById('church_name_banner').innerText = s.church_name;
+            }
+            if (s.mission_statement) document.getElementById('mission_statement').innerText = s.mission_statement;
+            if (s.location_name) document.getElementById('location_name').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${s.location_name}`;
+            if (s.live_thumbnail) document.getElementById('live_thumb').src = s.live_thumbnail;
+            if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
+
+            if (isAdmin) {
+                addEditOverlay('church_name', 'church_name');
+                addEditOverlay('mission_statement', 'mission_statement');
+                addEditOverlay('location_name', 'location_name');
+                addEditOverlay('verseImage', 'daily_verse_img', true);
+            }
+        });
+
+        function addEditOverlay(elementId, settingKey, isImage = false) {
+            const el = document.getElementById(elementId);
+            const parent = el.parentElement;
+            if (window.getComputedStyle(parent).position === 'static') {
+                parent.style.position = 'relative';
+            }
+
+            const btn = document.createElement('div');
+            btn.className = 'admin-edit-btn';
+            btn.style.width = '24px'; btn.style.height = '24px';
+            btn.style.top = isImage ? '10px' : '-5px';
+            btn.style.right = isImage ? '10px' : '-25px';
+
+            btn.innerHTML = '<i class="fa-solid fa-pen" style="font-size: 0.6rem;"></i>';
+            btn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (isImage) {
+                    const choice = confirm("Press OK to BROWSE for a file, or CANCEL to enter a URL.");
+                    if (choice) {
+                        const input = document.createElement('input');
+                        input.type = 'file'; input.accept = 'image/*';
+                        input.onchange = async () => {
+                            const formData = new FormData();
+                            formData.append('image', input.files[0]);
+                            const uploadRes = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+                            const uploadData = await uploadRes.json();
+                            if (uploadData.url) updateSetting(settingKey, uploadData.url);
+                        };
+                        input.click();
+                    } else {
+                        const newVal = prompt("Enter new Image URL:", el.src);
+                        if (newVal) updateSetting(settingKey, newVal);
+                    }
+                } else {
+                    const newVal = prompt(`Update ${settingKey.replace('_', ' ')}:`, el.innerText);
+                    if (newVal) updateSetting(settingKey, newVal);
+                }
+            };
+            el.parentElement.appendChild(btn);
+        }
+
+        async function updateSetting(key, value) {
+            const data = {}; data[key] = value;
+            await fetch('http://localhost:3000/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            window.location.reload();
+        }
+    </script>
 </body>
 
 </html>

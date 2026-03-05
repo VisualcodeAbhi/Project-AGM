@@ -18,13 +18,11 @@
             <div style="text-align: center;">
                 <i class="fa-solid fa-church"
                     style="color: var(--primary-gold); font-size: 1.5rem; display: block; margin-bottom: 2px;"></i>
-                <span class="serif"
+                <span class="serif app-title-dynamic"
                     style="font-size: 0.9rem; color: chocolate; font-weight: 700; letter-spacing: 0.5px;">AGAPE
                     GOSPEL MINISTRIES</span>
             </div>
             <div style="display: flex; gap: 15px;">
-                <!-- <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i> -->
-                <!-- <i class="fa-regular fa-user" style="color: var(--text-muted);"></i> -->
             </div>
         </header>
 
@@ -32,70 +30,131 @@
         <section class="section"
             style="padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
             <h2 class="serif center" style="font-size: 1.8rem;">Upcoming Events</h2>
-            <!-- <i class="fa-solid fa-sliders" style="color: var(--text-muted);"></i> -->
         </section>
 
         <!-- Events List -->
-        <section class="section animate-in">
-            <!-- Event 1: Youth Night -->
-            <div class="glass event-card">
-                <div class="event-card-top">
-
-                    <div class="event-details-v2">
-                        <h3 class="serif">Youth Night</h3>
-                        <p>Friday, Jan 19 <br> 7:00 PM - 9:00 PM</p>
-                        <p><i class="fa-solid fa-location-dot"></i> Agape Gospel Ministries</p>
-                    </div>
-                </div>
-                <div class="event-footer">
-                    <div class="event-graphic">🔥</div>
-                    <button class="join-btn">JOIN</button>
-                </div>
-            </div>
-
-            <!-- Event 2: Community Outreach -->
-            <div class="glass event-card">
-                <div class="event-card-top">
-                    <div class="event-details-v2">
-                        <h3 class="serif">Community Outreach</h3>
-                        <p>Saturday, Jan 20 <br> 10:00 AM - 1:00 PM</p>
-                        <p><i class="fa-solid fa-location-dot"></i> Agape Gospel Ministries</p>
-                    </div>
-                </div>
-                <div class="event-footer">
-                    <div class="event-graphic">🤝❤️</div>
-                    <button class="join-btn">JOIN</button>
-                </div>
-            </div>
-
-            <!-- Event 3: Main Service -->
-            <div class="glass event-card">
-                <div class="event-card-top">
-                    <div class="event-details-v2">
-                        <h3 class="serif">Main Service</h3>
-                        <p>Sunday, Jan 21 <br> 9:00 AM & 11:00 AM</p>
-                        <p><i class="fa-solid fa-location-dot"></i> Agape Gospel Ministries</p>
-                    </div>
-                </div>
-                <div class="event-footer">
-                    <div class="event-graphic">⛪</div>
-                    <button class="join-btn">JOIN</button>
-                </div>
+        <section class="section animate-in" id="eventsContainer">
+            <!-- Loading State -->
+            <div class="glass" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p>Loading upcoming events...</p>
             </div>
         </section>
 
-        <!-- Calendar Placeholder (Optional) -->
-        <section class="section animate-in" style="padding-top: 0;">
-            <div class="glass" style="padding: 20px; text-align: center;">
-                <p style="color: var(--text-muted); font-size: 0.9rem;">View full calendar for January</p>
-            </div>
-        </section>
+        <script>
+            document.addEventListener('DOMContentLoaded', loadPublicEvents);
+
+            async function loadPublicEvents() {
+                try {
+                    const res = await fetch('http://192.168.1.3:3000/api/settings');
+                    const s = await res.json();
+                    document.querySelectorAll('.app-title-dynamic').forEach(el => el.innerText = s.church_name);
+
+                    const eventRes = await fetch('http://192.168.1.3:3000/api/events');
+                    const events = await eventRes.json();
+                    const container = document.getElementById('eventsContainer');
+                    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+                    if (isAdmin) {
+                        const addBtn = document.createElement('div');
+                        addBtn.className = 'admin-add-btn';
+                        addBtn.style.margin = '20px 0 30px 0';
+                        addBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add New Event';
+                        addBtn.onclick = () => window.location.href = 'admin.html#events';
+                        container.parentNode.insertBefore(addBtn, container);
+                    }
+
+                    if (events.length === 0) {
+                        container.innerHTML = `
+                            <div class="glass" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                                <p>No upcoming events currently scheduled. Check back soon!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    events.forEach(event => {
+                        // Better date parsing for badge
+                        let displayDay = event.date.split(' ')[0];
+                        let displayMonth = event.date.split(' ')[1] || '';
+
+                        if (event.date.includes('-')) { // YYYY-MM-DD format
+                            const d = new Date(event.date);
+                            displayDay = d.getDate();
+                            displayMonth = d.toLocaleString('default', { month: 'short' });
+                        }
+
+                        container.innerHTML += `
+                            <div class="glass event-card animate-in" style="margin-bottom: 20px; position: relative;">
+                                ${isAdmin ? `<div class="admin-edit-btn" onclick="deleteEventNow(${event.id})" style="top: 10px; right: 10px;"><i class="fa-solid fa-trash" style="font-size: 0.8rem;"></i></div>` : ''}
+                                <div class="event-date-badge">
+                                    <span class="day">${displayDay}</span>
+                                    <span class="month">${displayMonth}</span>
+                                </div>
+                                <div class="event-details" style="padding: 20px;">
+                                    <h3 class="serif">${event.title}</h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-clock"></i> ${event.time}</p>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${event.location}</p>
+                                    <button onclick="handleJoinEvent('${event.date}', '${event.time}')" class="join-btn" style="border:none; cursor:pointer; width: 100%;">
+                                        <i class="fa-solid fa-play"></i> Join Service
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } catch (error) {
+                    console.error('Failed to load events:', error);
+                }
+            }
+
+            function handleJoinEvent(dateStr, timeStr) {
+                try {
+                    // Normalize date and time for comparison
+                    let eventDate;
+                    if (dateStr.includes('-')) {
+                        eventDate = new Date(dateStr + 'T' + (timeStr.includes(':') ? timeStr : '00:00'));
+                    } else {
+                        // Fallback for legacy text dates - assume current year
+                        const currentYear = new Date().getFullYear();
+                        eventDate = new Date(`${dateStr} ${currentYear} ${timeStr}`);
+                    }
+
+                    const now = new Date();
+
+                    // Allow joining 15 minutes early
+                    const bufferTime = 15 * 60 * 1000;
+                    if (now >= (eventDate.getTime() - bufferTime)) {
+                        window.location.href = 'live.html';
+                    } else {
+                        const timeDiff = eventDate - now;
+                        const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+                        const mins = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+                        let message = "This service hasn't started yet.";
+                        if (hours > 0) message += ` Starts in ${hours}h ${mins}m.`;
+                        else message += ` Starts in ${mins} minutes.`;
+
+                        alert(message + "\nScheduled: " + timeStr);
+                    }
+                } catch (e) {
+                    // If parsing fails, just redirect (better than doing nothing)
+                    window.location.href = 'live.html';
+                }
+            }
+
+            async function deleteEventNow(id) {
+                if (!confirm('Delete this event?')) return;
+                await fetch(`http://localhost:3000/api/events/${id}`, { method: 'DELETE' });
+                window.location.reload();
+            }
+        </script>
 
         <!-- Bottom Navigation -->
         <nav class="glass bottom-nav">
-            <a href="sermons.html" class="nav-item">
-                <i class="fa-solid fa-book-open"></i>
-                <span>Sermons</span>
+            <a href="songs.html" class="nav-item">
+                <i class="fa-solid fa-music"></i>
+                <span>Songs</span>
             </a>
             <a href="events.html" class="nav-item active">
                 <i class="fa-solid fa-calendar-days"></i>
@@ -105,7 +164,7 @@
                 <div class="home-circle">
                     <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
                 </div>
-                <span>Home</span>
+                <span></span>
             </a>
             <a href="bible.html" class="nav-item">
                 <i class="fa-solid fa-bible"></i>

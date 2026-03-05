@@ -1,0 +1,7 @@
+node_modules/
+android/
+www/
+prayers.db
+uploads/
+.env
+*.log

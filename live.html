@@ -11,50 +11,84 @@
 
 <body>
     <div class="app-container">
-        <!-- Modern Header based on Reference -->
-        <header class="section" style="padding-top: 40px; display: flex; align-items: center;">
-            <a href="index.html" style="color: var(--text-light); font-size: 1.5rem; text-decoration: none;">
+        <!-- Header -->
+        <header class="section" style="padding-top: 40px; text-align: center; position: relative;">
+            <a href="index.html"
+                style="position: absolute; left: 25px; top: 45px; color: white; text-decoration: none; font-size: 1.2rem;">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
-            <h1 class="serif" style="flex: 1; text-align: center; font-size: 1.6rem; color: var(--text-light);">Live
-            </h1>
-            <div style="width: 24px;"></div> <!-- Spacer for balance -->
+            <h1 class="serif" style="color: var(--primary-gold); font-size: 1.8rem;">Live</h1>
         </header>
 
-        <!-- Live Content Section -->
-        <section class="section animate-in" style="text-align: center; padding-top: 40px;">
-            <h2 class="serif" style="font-size: 1.4rem; color: var(--text-light); letter-spacing: 1px; opacity: 0.9;">
-                AGAPE GOSPEL MINISTRIES
-            </h2>
-
-            <div class="live-status">
-                <i class="fa-solid fa-circle" style="font-size: 0.8rem;"></i>
+        <!-- Live Content -->
+        <section class="section animate-in" style="text-align: center; padding-top: 30px;">
+            <p id="live_church_name"
+                style="color: var(--primary-gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 5px;">...</p>
+            <p
+                style="color: #ff4757; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span
+                    style="width: 8px; height: 8px; background: #ff4757; border-radius: 50%; display: inline-block;"></span>
                 LIVE SERVICE
-                <i class="fa-solid fa-circle" style="font-size: 0.8rem;"></i>
-            </div>
+                <span
+                    style="width: 8px; height: 8px; background: #ff4757; border-radius: 50%; display: inline-block;"></span>
+            </p>
 
-            <!-- YouTube Video Embed -->
-            <div class="video-container animate-in" style="animation-delay: 0.2s;">
-                <iframe src="https://www.youtube.com/embed/HOuTe90NEeQ?autoplay=1"
-                    title="Live Service - Agape Gospel Ministries"
+            <div class="glass" style="margin-top: 30px; border-radius: 25px; overflow: hidden; aspect-ratio: 16/9;">
+                <iframe id="live_iframe" width="100%" height="100%" src="" frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen>
                 </iframe>
             </div>
 
             <div style="margin-top: 40px;">
-                <a href="https://youtube.com/@agapegospelministries2003?si=8IHO6zC2QKy3QpI7" target="_blank" class="btn"
-                    style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; width: auto;">
-                    <i class="fa-brands fa-youtube"></i> Watch on YouTube
+                <a id="watch_on_youtube_btn" href="https://youtube.com/@agapegospelministries2003" target="_blank"
+                    class="btn"
+                    style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; width: auto; background: #FF0000; color: white;">
+                    <i class="fa-brands fa-youtube"></i> Watch on YouTube Live
                 </a>
             </div>
         </section>
 
+        <script>
+            function getYouTubeEmbedUrl(url) {
+                if (!url) return '';
+                if (url.includes('/embed/')) return url;
+
+                let videoId = '';
+                if (url.includes('v=')) {
+                    videoId = url.split('v=')[1].split('&')[0];
+                } else if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0];
+                } else if (url.includes('/live/')) {
+                    videoId = url.split('/live/')[1].split('?')[0];
+                }
+
+                if (videoId) {
+                    // Remove any trailing slashes
+                    videoId = videoId.replace('/', '');
+                    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                }
+                return url;
+            }
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                const res = await fetch('http://192.168.1.3:3000/api/settings');
+                const s = await res.json();
+                document.getElementById('live_church_name').innerText = (s.church_name || 'AGAPE GOSPEL MINISTRIES').toUpperCase();
+
+                if (s.live_video_url) {
+                    const embedUrl = getYouTubeEmbedUrl(s.live_video_url);
+                    document.getElementById('live_iframe').src = embedUrl;
+                    document.getElementById('watch_on_youtube_btn').href = s.live_video_url;
+                }
+            });
+        </script>
+
         <!-- Bottom Navigation -->
         <nav class="glass bottom-nav">
-            <a href="sermons.html" class="nav-item">
-                <i class="fa-solid fa-book-open"></i>
-                <span>Sermons</span>
+            <a href="songs.html" class="nav-item">
+                <i class="fa-solid fa-music"></i>
+                <span>Songs</span>
             </a>
             <a href="events.html" class="nav-item">
                 <i class="fa-solid fa-calendar-days"></i>
@@ -64,7 +98,7 @@
                 <div class="home-circle">
                     <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
                 </div>
-                <span>Home</span>
+                <span></span>
             </a>
             <a href="bible.html" class="nav-item">
                 <i class="fa-solid fa-bible"></i>

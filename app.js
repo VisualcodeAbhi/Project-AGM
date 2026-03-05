@@ -17,6 +17,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Admin Mode Global Logic
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    if (isAdmin) {
+        // Inject admin bar
+        const bar = document.createElement('div');
+        bar.className = 'admin-mode-bar';
+        bar.innerHTML = `
+            <span><i class="fa-solid fa-user-shield"></i> Admin Mode Active</span>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <a href="admin.html" style="color:black; text-decoration:none; font-size:0.7rem; background:rgba(255,255,255,0.3); padding:4px 8px; border-radius:4px;">Dashboard</a>
+                <button class="exit-btn" id="exitAdmin">Exit</button>
+            </div>
+        `;
+        document.body.prepend(bar);
+        document.body.style.paddingTop = '40px';
+
+        document.getElementById('exitAdmin').onclick = () => {
+            localStorage.removeItem('isAdmin');
+            window.location.reload();
+        };
+    }
 });
 
 // Verse Modal Functions (Daily Verse Only)

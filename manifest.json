@@ -1,0 +1,16 @@
+{
+    "name": "Agape Gospel Ministries",
+    "short_name": "Agape",
+    "description": "The official app for Agape Gospel Ministries",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#0a1128",
+    "theme_color": "#d4af37",
+    "icons": [
+        {
+            "src": "assets/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
