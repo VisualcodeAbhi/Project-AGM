@@ -63,7 +63,9 @@ const db = new sqlite3.Database('./prayers.db', (err) => {
 // --- Upload Route ---
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const host = req.get('host');
+    const secureProtocol = host && host.includes('localhost') ? 'http' : 'https';
+    const fileUrl = `${secureProtocol}://${host}/uploads/${req.file.filename}`;
     res.json({ url: fileUrl });
 });
 
