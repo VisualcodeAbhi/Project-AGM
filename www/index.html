@@ -162,35 +162,37 @@
 
     <script src="app.js"></script>
     <script>
-        try {
-            const res = await fetch('https://project-agm.onrender.com/api/settings');
-            if (!res.ok) throw new Error('Failed to fetch settings');
-            const s = await res.json();
-            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+        (async function loadHomeSettings() {
+            try {
+                const res = await fetch('https://project-agm.onrender.com/api/settings');
+                if (!res.ok) throw new Error('Failed to fetch settings');
+                const s = await res.json();
+                const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-            if (s.church_name) {
-                document.getElementById('church_name').innerText = s.church_name;
-                document.getElementById('church_name_banner').innerText = s.church_name;
-            }
-            if (s.mission_statement) document.getElementById('mission_statement').innerText = s.mission_statement;
-            if (s.location_name) document.getElementById('location_name').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${s.location_name}`;
-            if (s.live_thumbnail) document.getElementById('live_thumb').src = s.live_thumbnail;
-            if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
+                if (s.church_name) {
+                    document.getElementById('church_name').innerText = s.church_name;
+                    document.getElementById('church_name_banner').innerText = s.church_name;
+                }
+                if (s.mission_statement) document.getElementById('mission_statement').innerText = s.mission_statement;
+                if (s.location_name) document.getElementById('location_name').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${s.location_name}`;
+                if (s.live_thumbnail) document.getElementById('live_thumb').src = s.live_thumbnail;
+                if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
 
-            if (isAdmin) {
-                addEditOverlay('church_name', 'church_name');
-                addEditOverlay('mission_statement', 'mission_statement');
-                addEditOverlay('location_name', 'location_name');
-                addEditOverlay('verseImage', 'daily_verse_img', true);
-                addEditOverlay('live_thumb', 'live_thumbnail', true);
-                addEditOverlay('church_name_banner', 'church_name');
+                if (isAdmin) {
+                    addEditOverlay('church_name', 'church_name');
+                    addEditOverlay('mission_statement', 'mission_statement');
+                    addEditOverlay('location_name', 'location_name');
+                    addEditOverlay('verseImage', 'daily_verse_img', true);
+                    addEditOverlay('live_thumb', 'live_thumbnail', true);
+                    addEditOverlay('church_name_banner', 'church_name');
+                }
+            } catch (error) {
+                console.error('Settings load failed:', error);
+                // Even if fetch fails, check if we're admin to show the bar/exit
+                const isAdmin = localStorage.getItem('isAdmin') === 'true';
+                if (isAdmin) document.body.style.paddingTop = '40px';
             }
-        } catch (error) {
-            console.error('Settings load failed:', error);
-            // Even if fetch fails, check if we're admin to show the bar/exit
-            const isAdmin = localStorage.getItem('isAdmin') === 'true';
-            if (isAdmin) document.body.style.paddingTop = '40px';
-        }
+        })();
 
         function addEditOverlay(elementId, settingKey, isImage = false) {
             const el = document.getElementById(elementId);
@@ -243,6 +245,15 @@
                 body: JSON.stringify(data)
             });
             window.location.reload();
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+            });
         }
     </script>
 </body>
