@@ -6,6 +6,7 @@ const multer = require('multer');
 const cors = require('cors');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // Set up storage for uploads

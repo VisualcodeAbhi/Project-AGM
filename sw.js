@@ -1,4 +1,4 @@
-const CACHE_NAME = 'agape-v2';
+const CACHE_NAME = 'agape-v3';
 const ASSETS = [
     '/',
     '/index.html',
@@ -37,12 +37,9 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // For API requests, try network first, then cache
-    if (event.request.url.includes('/api/')) {
-        event.respondWith(
-            fetch(event.request).catch(() => caches.match(event.request))
-        );
-        return;
+    // Ignore API requests and non-GET requests completely
+    if (event.request.url.includes('/api/') || event.request.method !== 'GET') {
+        return; // Browser handles this natively
     }
 
     // For other requests (HTML, JS, CSS), use Network First strategy
