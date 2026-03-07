@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         document.body.prepend(bar);
-        document.body.style.paddingTop = '40px';
+        document.body.style.paddingTop = '80px';
 
         document.getElementById('exitAdmin').onclick = () => {
             localStorage.removeItem('isAdmin');

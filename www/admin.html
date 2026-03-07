@@ -142,6 +142,7 @@
 
 <body>
     <div class="app-container">
+        <div class="space"></div>
         <header class="section" style="padding-top: 30px; text-align: center;">
             <h1 class="serif" style="color: var(--primary-gold); font-size: 1.8rem;">Admin Central</h1>
             <p style="color: var(--text-muted); font-size: 0.8rem;">Full Ministry Control</p>
@@ -189,15 +190,6 @@
                 <div class="form-row">
                     <label>Live/Featured Video Embed URL</label>
                     <input type="text" id="set_live_video_url" class="input-field">
-                </div>
-
-                <div class="form-row">
-                    <label>Home Video Thumbnail</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="set_live_thumbnail" class="input-field" style="flex: 1;">
-                        <button onclick="browseFile('set_live_thumbnail')" class="btn"
-                            style="height: 45px; padding: 0 15px; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Browse</button>
-                    </div>
                 </div>
 
                 <div class="form-row">
@@ -350,12 +342,28 @@
             btn.innerText = "Saving...";
             btn.disabled = true;
 
-            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'live_thumbnail', 'daily_verse_img'];
+            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'daily_verse_img'];
             const data = {};
             keys.forEach(k => {
                 const el = document.getElementById('set_' + k);
                 if (el) data[k] = el.value;
             });
+
+            // Auto-extract YouTube Thumbnail for Live Video
+            let videoUrl = data.live_video_url || '';
+            let videoId = '';
+            if (videoUrl.includes('v=')) {
+                videoId = videoUrl.split('v=')[1].split('&')[0];
+            } else if (videoUrl.includes('youtu.be/')) {
+                videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
+            } else if (videoUrl.includes('embed/')) {
+                videoId = videoUrl.split('embed/')[1].split('?')[0];
+            }
+            if (videoId) {
+                data.live_thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+            } else {
+                data.live_thumbnail = 'assets/sermon1.jpg'; // default fallback
+            }
 
             try {
                 const res = await fetch(`${API}/settings`, {
