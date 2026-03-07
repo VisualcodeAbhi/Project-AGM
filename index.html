@@ -66,8 +66,8 @@
             </div>
             <a href="live.html" style="text-decoration: none; color: inherit;">
                 <div class="glass media-card animate-in" style="height: 250px;">
-                    <img id="live_thumb" src="https://img.youtube.com/vi/HOuTe90NEeQ/maxresdefault.jpg"
-                        alt="Latest Service" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img id="live_thumb" src="assets/sermons-preview.png" alt="Latest Service"
+                        style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="play-overlay" style="opacity: 1;">
                         <i class="fa-solid fa-play"></i>
                     </div>
@@ -178,7 +178,19 @@
                 }
                 if (s.mission_statement) document.getElementById('mission_statement').innerText = s.mission_statement;
                 if (s.location_name) document.getElementById('location_name').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${s.location_name}`;
-                if (s.live_thumbnail) document.getElementById('live_thumb').src = s.live_thumbnail;
+
+                // Automatically extract the YouTube thumbnail if available
+                let thumbSrc = s.live_thumbnail;
+                if (!thumbSrc && s.live_video_url) {
+                    let videoUrl = s.live_video_url;
+                    let videoId = '';
+                    if (videoUrl.includes('v=')) videoId = videoUrl.split('v=')[1].split('&')[0];
+                    else if (videoUrl.includes('youtu.be/')) videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
+                    else if (videoUrl.includes('embed/')) videoId = videoUrl.split('embed/')[1].split('?')[0];
+                    if (videoId) thumbSrc = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+                }
+                if (thumbSrc) document.getElementById('live_thumb').src = thumbSrc;
+
                 if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
 
                 if (isAdmin) {
