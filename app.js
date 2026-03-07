@@ -99,3 +99,20 @@ async function shareToWhatsApp() {
         alert("To share the image on WhatsApp:\n1. Long-press the image to save it.\n2. Open WhatsApp and share it from your gallery.");
     }
 }
+
+// --- Offline Loader Logic ---
+function setupOfflineLoader() {
+    const overlay = document.createElement('div');
+    overlay.id = 'offline-overlay';
+    overlay.className = navigator.onLine ? 'hidden' : '';
+    overlay.innerHTML = `
+        <i class="fa-solid fa-wifi offline-icon"></i>
+        <h2 style="font-family: 'Playfair Display', serif; font-size:1.8rem;">No Internet</h2>
+        <p style="opacity: 0.8; margin-top: 10px;">Please check your connection and try again.</p>
+    `;
+    document.body.appendChild(overlay);
+
+    window.addEventListener('online', () => overlay.classList.add('hidden'));
+    window.addEventListener('offline', () => overlay.classList.remove('hidden'));
+}
+document.addEventListener('DOMContentLoaded', setupOfflineLoader);
