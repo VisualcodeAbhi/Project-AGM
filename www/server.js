@@ -1,5 +1,6 @@
+require('dotenv').config();
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -9,15 +10,22 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
-// Set up storage for uploads
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+// Set up Cloudinary for uploads
+cloudinary.config({
+    cloud_name: 'dfv52ejiq',
+    api_key: '342431531922748',
+    api_secret: 'sx6EpwUADNn6sJV8zJVXAQMCWV4'
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'agape_images',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    },
 });
 
 const upload = multer({ storage: storage });
@@ -28,163 +36,164 @@ app.use(cors());
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 app.use(express.json());
-app.use('/uploads', express.static(uploadDir));
 app.use(express.static(path.join(__dirname, '')));
 
-// Initialize Database
-const db = new sqlite3.Database('./prayers.db', (err) => {
-    if (err) {
-        console.error('Error opening database', err.message);
-    } else {
-        console.log('Connected to the SQLite database.');
-        // Create tables
-        db.run(`CREATE TABLE IF NOT EXISTS prayers (id INTEGER PRIMARY KEY AUTOINCREMENT, user_name TEXT, request TEXT, praying_count INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`);
-        db.run(`CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, date TEXT, time TEXT, location TEXT, image_url TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`);
-        db.run(`CREATE TABLE IF NOT EXISTS sermons (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, speaker TEXT, video_url TEXT, thumbnail_url TEXT, category TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`);
-        db.run(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`, (err) => {
-            if (!err) {
-                const defaults = [
-                    ['church_name', 'Agape Gospel Ministries'],
-                    ['founded_date', '23rd December 2003'],
-                    ['location_name', 'Takkellapadu'],
-                    ['mission_statement', '"Walking in Faith since 2003"'],
-                    ['phone', '+91 9394300400'],
-                    ['email', 'agapegospelministries2003@gmail.com'],
-                    ['live_video_url', 'https://www.youtube.com/embed/HOuTe90NEeQ'],
-                    ['live_thumbnail', 'assets/sermon1.jpg'],
-                    ['daily_verse_img', 'assets/Daily.jpeg']
-                ];
-                defaults.forEach(d => db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`, d));
-            }
-        });
+// Initialize MongoDB
+const mongoURI = 'mongodb+srv://abhilashdurgam0_db_user:KZOl6ANdJdt1Jr1W@cluster0.jppct2m.mongodb.net/agapeministries?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(mongoURI)
+    .then(() => {
+        console.log('Connected to MongoDB.');
+        initializeDefaultSettings();
+    })
+    .catch(err => console.error('MongoDB connection error:', err));
+
+// Mongoose Schemas
+const SettingSchema = new mongoose.Schema({ key: { type: String, unique: true }, value: String });
+const Setting = mongoose.model('Setting', SettingSchema);
+
+const EventSchema = new mongoose.Schema({ title: String, date: String, time: String, location: String, image_url: String }, { timestamps: true });
+const Event = mongoose.model('Event', EventSchema);
+
+const SermonSchema = new mongoose.Schema({ title: String, speaker: String, video_url: String, thumbnail_url: String, category: String }, { timestamps: true });
+const Sermon = mongoose.model('Sermon', SermonSchema);
+
+const PrayerSchema = new mongoose.Schema({ user_name: { type: String, default: 'Anonymous' }, request: String, praying_count: { type: Number, default: 0 } }, { timestamps: true });
+const Prayer = mongoose.model('Prayer', PrayerSchema);
+
+async function initializeDefaultSettings() {
+    const defaults = [
+        ['church_name', 'Agape Gospel Ministries'],
+        ['founded_date', '23rd December 2003'],
+        ['location_name', 'Takkellapadu'],
+        ['mission_statement', '"Walking in Faith since 2003"'],
+        ['phone', '+91 9394300400'],
+        ['email', 'agapegospelministries2003@gmail.com'],
+        ['live_video_url', 'https://www.youtube.com/embed/HOuTe90NEeQ'],
+        ['live_thumbnail', 'assets/sermons-preview.png'],
+        ['daily_verse_img', 'assets/Daily.jpeg']
+    ];
+    for (let [key, value] of defaults) {
+        await Setting.updateOne({ key }, { $setOnInsert: { value } }, { upsert: true });
     }
-});
+}
 
 // --- Upload Route ---
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const host = req.get('host');
-    const secureProtocol = host && host.includes('localhost') ? 'http' : 'https';
-    const fileUrl = `${secureProtocol}://${host}/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl });
+    // Secure URL natively provided by Cloudinary
+    res.json({ url: req.file.path });
 });
 
 // --- Settings ---
-app.get('/api/settings', (req, res) => {
-    db.all(`SELECT * FROM settings`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+app.get('/api/settings', async (req, res) => {
+    try {
+        const rows = await Setting.find();
         const settings = {};
         rows.forEach(row => settings[row.key] = row.value);
         res.json(settings);
-    });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/settings', (req, res) => {
-    const settings = req.body;
-    const stmt = db.prepare(`INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`);
-    db.serialize(() => {
+app.post('/api/settings', async (req, res) => {
+    try {
+        const settings = req.body;
         for (const [key, value] of Object.entries(settings)) {
-            stmt.run(key, value);
+            await Setting.updateOne({ key }, { value }, { upsert: true });
         }
-        stmt.finalize(() => res.json({ success: true }));
-    });
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // --- Events ---
-app.get('/api/events', (req, res) => {
-    db.all(`SELECT * FROM events ORDER BY date ASC`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+app.get('/api/events', async (req, res) => {
+    try {
+        const events = await Event.find().sort({ date: 1 });
+        res.json(events.map(e => ({ ...e.toObject(), id: e._id })));
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/events', (req, res) => {
-    const { title, date, time, location, image_url } = req.body;
-    db.run(`INSERT INTO events (title, date, time, location, image_url) VALUES (?, ?, ?, ?, ?)`, 
-        [title, date, time, location, image_url], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, ...req.body });
-    });
+app.post('/api/events', async (req, res) => {
+    try {
+        const event = new Event(req.body);
+        await event.save();
+        res.json({ ...event.toObject(), id: event._id });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/events/:id', (req, res) => {
-    db.run(`DELETE FROM events WHERE id = ?`, [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/events/:id', async (req, res) => {
+    try {
+        await Event.findByIdAndDelete(req.params.id);
         res.json({ success: true });
-    });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/events/:id', (req, res) => {
-    const { title, date, time, location } = req.body;
-    db.run(`UPDATE events SET title = ?, date = ?, time = ?, location = ? WHERE id = ?`,
-        [title, date, time, location, req.params.id], function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-        });
-});
-
-// --- Sermons ---
-app.get('/api/sermons', (req, res) => {
-    db.all(`SELECT * FROM sermons ORDER BY created_at DESC`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
-});
-
-app.post('/api/sermons', (req, res) => {
-    const { title, speaker, video_url, thumbnail_url, category } = req.body;
-    db.run(`INSERT INTO sermons (title, speaker, video_url, thumbnail_url, category) VALUES (?, ?, ?, ?, ?)`, 
-        [title, speaker, video_url, thumbnail_url, category], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, ...req.body });
-    });
-});
-
-app.delete('/api/sermons/:id', (req, res) => {
-    db.run(`DELETE FROM sermons WHERE id = ?`, [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.put('/api/events/:id', async (req, res) => {
+    try {
+        await Event.findByIdAndUpdate(req.params.id, req.body);
         res.json({ success: true });
-    });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/sermons/:id', (req, res) => {
-    const { title, speaker, video_url, thumbnail_url, category } = req.body;
-    db.run(`UPDATE sermons SET title = ?, speaker = ?, video_url = ?, thumbnail_url = ?, category = ? WHERE id = ?`,
-        [title, speaker, video_url, thumbnail_url, category, req.params.id], function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-        });
+// --- Sermons (Songs) ---
+app.get('/api/sermons', async (req, res) => {
+    try {
+        const sermons = await Sermon.find().sort({ createdAt: -1 });
+        res.json(sermons.map(s => ({ ...s.toObject(), id: s._id })));
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/sermons', async (req, res) => {
+    try {
+        const sermon = new Sermon(req.body);
+        await sermon.save();
+        res.json({ ...sermon.toObject(), id: sermon._id });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/sermons/:id', async (req, res) => {
+    try {
+        await Sermon.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/sermons/:id', async (req, res) => {
+    try {
+        await Sermon.findByIdAndUpdate(req.params.id, req.body);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // --- Prayers ---
-app.get('/api/prayers', (req, res) => {
-    db.all(`SELECT id, user_name, request, praying_count, created_at || 'Z' as created_at FROM prayers ORDER BY created_at DESC`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+app.get('/api/prayers', async (req, res) => {
+    try {
+        const prayers = await Prayer.find().sort({ createdAt: -1 });
+        res.json(prayers.map(p => ({ ...p.toObject(), id: p._id, created_at: p.createdAt })));
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/prayers', (req, res) => {
-    const { userName, request } = req.body;
-    if (!request) return res.status(400).json({ error: 'Request required' });
-    db.run(`INSERT INTO prayers (user_name, request) VALUES (?, ?)`, [userName || 'Anonymous', request], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, userName: userName || 'Anonymous', request, praying_count: 0, created_at: new Date().toISOString() });
-    });
+app.post('/api/prayers', async (req, res) => {
+    try {
+        const { userName, request } = req.body;
+        if (!request) return res.status(400).json({ error: 'Request required' });
+        const prayer = new Prayer({ user_name: userName || 'Anonymous', request, praying_count: 0 });
+        await prayer.save();
+        res.json({ id: prayer._id, userName: prayer.user_name, request: prayer.request, praying_count: 0, created_at: prayer.createdAt });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/prayers/:id', (req, res) => {
-    db.run(`UPDATE prayers SET request = ? WHERE id = ?`, [req.body.request, req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.put('/api/prayers/:id', async (req, res) => {
+    try {
+        await Prayer.findByIdAndUpdate(req.params.id, { request: req.body.request });
         res.json({ success: true });
-    });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/prayers/:id', (req, res) => {
-    db.run(`DELETE FROM prayers WHERE id = ?`, [req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/prayers/:id', async (req, res) => {
+    try {
+        await Prayer.findByIdAndDelete(req.params.id);
         res.json({ success: true });
-    });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
