@@ -57,36 +57,29 @@
         </section>
 
         <script>
-            function getYouTubeEmbedUrl(url) {
-                if (!url) return '';
-                if (url.includes('/embed/')) return url;
-
-                let videoId = '';
-                if (url.includes('v=')) {
-                    videoId = url.split('v=')[1].split('&')[0];
-                } else if (url.includes('youtu.be/')) {
-                    videoId = url.split('youtu.be/')[1].split('?')[0];
-                } else if (url.includes('/live/')) {
-                    videoId = url.split('/live/')[1].split('?')[0];
-                }
-
-                if (videoId) {
-                    // Remove any trailing slashes
-                    videoId = videoId.replace('/', '');
-                    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-                }
-                return url;
+            function getYouTubeId(url) {
+                if (!url) return null;
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
             }
 
             document.addEventListener('DOMContentLoaded', async () => {
-                const res = await fetch('https://project-agm.onrender.com/api/settings');
-                const s = await res.json();
-                document.getElementById('live_church_name').innerText = (s.church_name || 'AGAPE GOSPEL MINISTRIES').toUpperCase();
+                try {
+                    const res = await fetch('https://project-agm.onrender.com/api/settings');
+                    const s = await res.json();
 
-                if (s.live_video_url) {
-                    const embedUrl = getYouTubeEmbedUrl(s.live_video_url);
-                    document.getElementById('live_iframe').src = embedUrl;
-                    document.getElementById('watch_on_youtube_btn').href = s.live_video_url;
+                    if (s.live_video_url) {
+                        const videoId = getYouTubeId(s.live_video_url);
+                        if (videoId) {
+                            document.getElementById('live_iframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                        } else {
+                            document.getElementById('live_iframe').src = s.live_video_url; // fallback
+                        }
+                        document.getElementById('watch_on_youtube_btn').href = s.live_video_url;
+                    }
+                } catch (e) {
+                    console.error('Failed to load live settings:', e);
                 }
             });
         </script>
