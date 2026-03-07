@@ -116,3 +116,33 @@ function setupOfflineLoader() {
     window.addEventListener('offline', () => overlay.classList.remove('hidden'));
 }
 document.addEventListener('DOMContentLoaded', setupOfflineLoader);
+
+// Custom Notification System
+function showToast(message, type = 'info') {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = 'info-circle';
+    if (type === 'success') icon = 'check-circle';
+    if (type === 'error') icon = 'exclamation-circle';
+
+    toast.innerHTML = `<i class='fa-solid fa-${icon}'></i><span>${message}</span>`;
+    container.appendChild(toast);
+
+    // Auto remove after 3s
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+}
+
+// Global alert replacement
+window.showStatus = showToast;
+

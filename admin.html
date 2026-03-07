@@ -305,7 +305,7 @@
                 console.log("All data loaded successfully");
             } catch (err) {
                 console.error("Dashboard init failed:", err);
-                alert("Alert: Some data failed to load. The backend might be starting up. Please refresh in a few seconds.\nError: " + err.message);
+                showStatus("Backend starting up... please wait.", "info");
             }
         }
 
@@ -372,13 +372,13 @@
                     body: JSON.stringify(data)
                 });
                 if (res.ok) {
-                    alert('All App Core details updated successfully!');
+                    showStatus('Settings Updated successfully!', 'success');
                 } else {
                     const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.error || `Server returned ${res.status}`);
+                    throw new Error(errData.error || `Server error`);
                 }
             } catch (err) {
-                alert('Save failed: ' + err.message);
+                showStatus('Save failed: ' + err.message, 'error');
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
@@ -401,12 +401,12 @@
                     const data = await res.json();
                     if (data.url) {
                         document.getElementById(targetId).value = data.url;
-                        alert('Image uploaded successfully!');
+                        showStatus('Image uploaded!', 'success');
                     }
                 } catch (err) {
-                    alert('Upload failed: ' + err.message);
+                    showStatus('Upload failed', 'error');
                 }
-            };
+            }
             fileInput.click();
         }
 
@@ -624,11 +624,22 @@
         }
 
         async function deleteItem(type, id) {
-            if (!confirm('Are you sure?')) return;
-            await fetch(`${API}/${type}/${id}`, { method: 'DELETE' });
-            if (type === 'events') loadEvents();
-            if (type === 'sermons') loadSermons();
-            if (type === 'prayers') loadPrayers();
+            const confirmed = await askUser('Confirm Delete', 'Are you sure you want to remove this item?');
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`${API}/${type}/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showStatus('Item Deleted', 'success');
+                    if (type === 'events') loadEvents();
+                    if (type === 'sermons') loadSermons();
+                    if (type === 'prayers') loadPrayers();
+                } else {
+                    showStatus('Delete failed', 'error');
+                }
+            } catch (e) {
+                showStatus('Connection error', 'error');
+            }
         }
     </script>
     <script>

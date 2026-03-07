@@ -145,14 +145,19 @@
                 localStorage.setItem(`my_prayer_${data.id}`, 'true');
                 document.getElementById('prayerRequest').value = '';
                 document.getElementById('userName').value = '';
+                showStatus('Prayer Request Sent!', 'success');
                 loadPrayers();
+            } else {
+                showStatus('Submission failed', 'error');
             }
         }
 
         async function deletePrayer(id) {
-            if (!confirm('Delete your prayer request?')) return;
+            const ok = await askUser('Delete Prayer', 'Remove your prayer request?');
+            if (!ok) return;
             await fetch(`https://project-agm.onrender.com/api/prayers/${id}`, { method: 'DELETE' });
             localStorage.removeItem(`my_prayer_${id}`);
+            showStatus('Prayer deleted', 'info');
             loadPrayers();
         }
 
