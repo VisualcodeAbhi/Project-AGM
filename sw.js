@@ -1,4 +1,4 @@
-const CACHE_NAME = 'agape-v4';
+const CACHE_NAME = 'agape-v5';
 const ASSETS = [
     '/',
     '/index.html',
