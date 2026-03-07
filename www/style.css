@@ -97,8 +97,8 @@ h3,
 
 .founding-badge {
     position: absolute;
-    top: 20px;
-    color: white;
+    top: 40px;
+    color: rgb(255, 255, 255);
     right: 20px;
     font-size: 0.6rem;
     border: 1px solid var(--primary-gold);
