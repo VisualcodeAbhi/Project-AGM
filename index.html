@@ -93,10 +93,11 @@
                     <i class="fa-solid fa-hands-praying" style="font-size: 2rem; color: var(--primary-gold);"></i>
                     <p style="font-weight: 600;">Prayer</p>
                 </a>
-                <div class="glass service-card" style="min-width: 160px; align-items: center; text-align: center;">
+                <a href="giving.html" class="glass service-card"
+                    style="min-width: 160px; align-items: center; text-align: center; text-decoration: none; color: inherit;">
                     <i class="fa-solid fa-heart" style="font-size: 2rem; color: var(--primary-gold);"></i>
                     <p style="font-weight: 600;">Giving</p>
-                </div>
+                </a>
                 <a href="https://chat.whatsapp.com/CajfmWQUkfcHz4Dnm6UcoP" target="_blank" class="glass service-card"
                     style="min-width: 160px; align-items: center; text-align: center; text-decoration: none; color: inherit;">
                     <i class="fa-solid fa-users" style="font-size: 2rem; color: var(--primary-gold);"></i>
@@ -222,7 +223,12 @@
                         input.onchange = async () => {
                             const formData = new FormData();
                             formData.append('image', input.files[0]);
-                            const uploadRes = await fetch('https://project-agm.onrender.com/api/upload', { method: 'POST', body: formData });
+                            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+                            const uploadRes = await fetch('https://project-agm.onrender.com/api/upload', {
+                                method: 'POST',
+                                headers: { 'Authorization': token },
+                                body: formData
+                            });
                             const uploadData = await uploadRes.json();
                             if (uploadData.url) updateSetting(settingKey, uploadData.url);
                         };
@@ -241,9 +247,13 @@
 
         async function updateSetting(key, value) {
             const data = {}; data[key] = value;
+            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
             await fetch('https://project-agm.onrender.com/api/settings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
                 body: JSON.stringify(data)
             });
             window.location.reload();

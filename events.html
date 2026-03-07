@@ -142,7 +142,11 @@
 
             async function deleteEventNow(id) {
                 if (!confirm('Delete this event?')) return;
-                await fetch(`https://project-agm.onrender.com/api/events/${id}`, { method: 'DELETE' });
+                const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+                await fetch(`https://project-agm.onrender.com/api/events/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': token }
+                });
                 window.location.reload();
             }
         </script>
