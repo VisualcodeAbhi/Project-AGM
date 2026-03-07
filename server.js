@@ -10,15 +10,22 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
-// Set up storage for uploads
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+// Set up Cloudinary for uploads
+cloudinary.config({
+    cloud_name: 'dfv52ejiq',
+    api_key: '342431531922748',
+    api_secret: 'sx6EpwUADNn6sJV8zJVXAQMCWV4'
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'agape_images',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    },
 });
 
 const upload = multer({ storage: storage });
@@ -29,7 +36,6 @@ app.use(cors());
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 app.use(express.json());
-app.use('/uploads', express.static(uploadDir));
 app.use(express.static(path.join(__dirname, '')));
 
 // Initialize MongoDB
@@ -74,10 +80,8 @@ async function initializeDefaultSettings() {
 // --- Upload Route ---
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const host = req.get('host');
-    const secureProtocol = host && host.includes('localhost') ? 'http' : 'https';
-    const fileUrl = `${secureProtocol}://${host}/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl });
+    // Secure URL natively provided by Cloudinary
+    res.json({ url: req.file.path });
 });
 
 // --- Settings ---
