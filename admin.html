@@ -352,18 +352,14 @@
 
             // Auto-extract YouTube Thumbnail for Live Video
             let videoUrl = data.live_video_url || '';
-            let videoId = '';
-            if (videoUrl.includes('v=')) {
-                videoId = videoUrl.split('v=')[1].split('&')[0];
-            } else if (videoUrl.includes('youtu.be/')) {
-                videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
-            } else if (videoUrl.includes('embed/')) {
-                videoId = videoUrl.split('embed/')[1].split('?')[0];
-            }
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = videoUrl.match(regExp);
+            const videoId = (match && match[2].length === 11) ? match[2] : null;
+
             if (videoId) {
                 data.live_thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
             } else {
-                data.live_thumbnail = 'assets/sermons-preview.png'; // updated fallback
+                data.live_thumbnail = ''; // Save empty so index.html can try to load fallback
             }
 
             try {

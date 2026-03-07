@@ -182,13 +182,13 @@
                 // Automatically extract the YouTube thumbnail if available
                 let thumbSrc = s.live_thumbnail;
                 if (!thumbSrc && s.live_video_url) {
-                    let videoUrl = s.live_video_url;
-                    let videoId = '';
-                    if (videoUrl.includes('v=')) videoId = videoUrl.split('v=')[1].split('&')[0];
-                    else if (videoUrl.includes('youtu.be/')) videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
-                    else if (videoUrl.includes('embed/')) videoId = videoUrl.split('embed/')[1].split('?')[0];
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+                    const match = s.live_video_url.match(regExp);
+                    const videoId = (match && match[2].length === 11) ? match[2] : null;
                     if (videoId) thumbSrc = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
                 }
+
+                if (!thumbSrc) thumbSrc = 'assets/sermons-preview.png'; // Fail-safe fallback
                 if (thumbSrc) document.getElementById('live_thumb').src = thumbSrc;
 
                 if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
