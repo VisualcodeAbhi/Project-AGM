@@ -69,7 +69,7 @@ async function initializeDefaultSettings() {
         ['phone', '+91 9394300400'],
         ['email', 'agapegospelministries2003@gmail.com'],
         ['live_video_url', 'https://www.youtube.com/embed/HOuTe90NEeQ'],
-        ['live_thumbnail', 'assets/sermon1.jpg'],
+        ['live_thumbnail', 'assets/sermons-preview.png'],
         ['daily_verse_img', 'assets/Daily.jpeg']
     ];
     for (let [key, value] of defaults) {
