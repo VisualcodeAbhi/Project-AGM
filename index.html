@@ -13,12 +13,20 @@
             navigator.serviceWorker.register('sw.js');
         }
     </script>
+    <style>
+        .space {
+            height: 10px;
+            width: 100%;
+            background-color: black;
+        }
+    </style>
 </head>
 
 <body>
     <div class="app-container">
         <!-- Hero Section -->
         <header class="hero-section">
+            <div class="space"></div>
             <div class="founding-badge">Est. 2003</div>
 
             <div class="hero-content animate-in"
@@ -96,10 +104,11 @@
                     <i class="fa-solid fa-heart" style="font-size: 2rem; color: var(--primary-gold);"></i>
                     <p style="font-weight: 600;">Giving</p>
                 </div>
-                <div class="glass service-card" style="min-width: 160px; align-items: center; text-align: center;">
+                <a href="https://chat.whatsapp.com/CajfmWQUkfcHz4Dnm6UcoP" target="_blank" class="glass service-card"
+                    style="min-width: 160px; align-items: center; text-align: center; text-decoration: none; color: inherit;">
                     <i class="fa-solid fa-users" style="font-size: 2rem; color: var(--primary-gold);"></i>
                     <p style="font-weight: 600;">Groups</p>
-                </div>
+                </a>
             </div>
         </section>
 
