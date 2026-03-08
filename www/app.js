@@ -154,8 +154,8 @@ window.showStatus = showToast;
         #server-wakeup-loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 25, 47, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(10, 25, 47, 0.98);
+            backdrop-filter: blur(15px);
             z-index: 9999;
             display: none;
             flex-direction: column;
@@ -170,13 +170,36 @@ window.showStatus = showToast;
             display: flex;
             opacity: 1;
         }
-        .wakeup-video {
-            width: 250px;
-            max-width: 80%;
-            border-radius: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            object-fit: cover;
+        
+        /* Eclipse Loader Styles */
+        .eclipse-container {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .eclipse-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            z-index: 2;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+        }
+        .eclipse-ring {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            box-shadow: 0 4px 0 0 #d4af37;
+            animation: eclipse-spin 1s linear infinite;
+            z-index: 1;
+        }
+        @keyframes eclipse-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     `;
     document.head.appendChild(style);
@@ -185,11 +208,12 @@ window.showStatus = showToast;
     const loaderOverlay = document.createElement('div');
     loaderOverlay.id = 'server-wakeup-loader';
     loaderOverlay.innerHTML = `
-        <video class="wakeup-video" autoplay loop muted playsinline>
-            <source src="assets/loader.mp4" type="video/mp4">
-        </video>
-        <h2 style="font-family: 'Playfair Display', serif; font-size:1.8rem; margin-bottom: 10px; color: #d4af37;">Connecting...</h2>
-        <p style="opacity: 0.8; font-size: 0.95rem; max-width: 80%;">Waking up the server.<br>This usually takes about 1-2 minutes on the first load, please wait...</p>
+        <div class="eclipse-container">
+            <img src="assets/church-logo.png" class="eclipse-logo">
+            <div class="eclipse-ring"></div>
+        </div>
+        <h2 style="font-family: 'Playfair Display', serif; font-size:1.8rem; margin-bottom: 10px; color: #d4af37;">Agape Gospel Ministries</h2>
+        <p style="opacity: 0.8; font-size: 0.95rem; max-width: 80%;">Waking up the server, please wait...</p>
     `;
     document.body.appendChild(loaderOverlay);
 
