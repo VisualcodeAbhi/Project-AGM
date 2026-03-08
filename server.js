@@ -219,6 +219,28 @@ app.post('/api/prayers/:id/pray', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// --- Global Search ---
+app.get('/api/search', async (req, res) => {
+    try {
+        const query = req.query.q || '';
+        if (!query) return res.json({ sermons: [], events: [], prayers: [] });
+        
+        const regex = new RegExp(query, 'i');
+        
+        const [sermons, events, prayers] = await Promise.all([
+            Sermon.find({ $or: [{ title: regex }, { speaker: regex }] }).limit(5),
+            Event.find({ title: regex }).limit(5),
+            Prayer.find({ request: regex }).limit(5)
+        ]);
+        
+        res.json({
+            sermons: sermons.map(s => ({ ...s.toObject(), id: s._id })),
+            events: events.map(e => ({ ...e.toObject(), id: e._id })),
+            prayers: prayers.map(p => ({ ...p.toObject(), id: p._id }))
+        });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });

@@ -226,3 +226,201 @@ window.showStatus = showToast;
         }
     };
 })();
+
+// --- Global Search Panel ---
+(function initGlobalSearch() {
+    // Inject Styles
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .search-trigger {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 45px;
+            height: 45px;
+            background: rgba(10, 25, 47, 0.85);
+            border: 1px solid var(--primary-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-gold);
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            transition: transform 0.2s ease;
+        }
+        .search-trigger:active { transform: scale(0.9); }
+        
+        #global-search-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 25, 47, 0.98);
+            backdrop-filter: blur(15px);
+            z-index: 99999;
+            display: none;
+            flex-direction: column;
+            padding: 80px 20px 20px;
+        }
+        #global-search-overlay.active { display: flex; }
+        
+        .search-header {
+            max-width: 500px;
+            margin: 0 auto 30px;
+            width: 100%;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--primary-gold);
+            padding: 15px 50px 15px 20px;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        .search-close {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.4rem;
+        }
+        
+        .search-results {
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .result-group { margin-bottom: 25px; }
+        .result-group h4 { 
+            color: var(--primary-gold); 
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        .result-item {
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.2s;
+        }
+        .result-item:hover { background: rgba(255,255,255,0.08); }
+        .result-icon {
+            width: 40px; height: 40px;
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--primary-gold);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .result-info h5 { margin: 0; font-size: 0.95rem; }
+        .result-info p { margin: 0; font-size: 0.75rem; opacity: 0.6; }
+    `;
+    document.head.appendChild(style);
+
+    // Create Search Trigger
+    const trigger = document.createElement('div');
+    trigger.className = 'search-trigger';
+    trigger.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+    trigger.onclick = () => {
+        overlay.classList.add('active');
+        input.focus();
+    };
+
+    // Create Search Overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'global-search-overlay';
+    overlay.innerHTML = `
+        <div class="search-header">
+            <input type="text" class="search-input" placeholder="Search sermons, events, prayers...">
+            <i class="fa-solid fa-xmark search-close"></i>
+        </div>
+        <div class="search-results">
+            <div id="search-empty" style="text-align:center; padding: 40px; opacity:0.5;">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:3rem; margin-bottom:15px;"></i>
+                <p>Type to search across the whole ministry</p>
+            </div>
+            <div id="search-content"></div>
+        </div>
+    `;
+
+    document.body.appendChild(trigger);
+    document.body.appendChild(overlay);
+
+    const input = overlay.querySelector('.search-input');
+    const closeBtn = overlay.querySelector('.search-close');
+    const content = overlay.querySelector('#search-content');
+    const empty = overlay.querySelector('#search-empty');
+
+    closeBtn.onclick = () => overlay.classList.remove('active');
+
+    let debounceTimer;
+    input.oninput = () => {
+        clearTimeout(debounceTimer);
+        const query = input.value.trim();
+        if (!query) {
+            content.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+            const res = await fetch(`https://project-agm.onrender.com/api/search?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            
+            empty.style.display = 'none';
+            content.innerHTML = '';
+
+            if (data.sermons.length > 0) {
+                renderGroup('Sermons & Songs', data.sermons, 'fa-music', 'songs.html');
+            }
+            if (data.events.length > 0) {
+                renderGroup('Upcoming Events', data.events, 'fa-calendar-days', 'events.html');
+            }
+            if (data.prayers.length > 0) {
+                renderGroup('Prayer Wall', data.prayers, 'fa-heart-pulse', 'prayer.html');
+            }
+
+            if (content.innerHTML === '') {
+                content.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5;"><p>No results found for "' + query + '"</p></div>';
+            }
+        }, 300);
+    };
+
+    function renderGroup(title, items, icon, link) {
+        const group = document.createElement('div');
+        group.className = 'result-group';
+        group.innerHTML = `<h4>${title}</h4>`;
+        
+        items.forEach(item => {
+            const div = document.createElement('a');
+            div.href = link;
+            div.className = 'result-item';
+            div.innerHTML = `
+                <div class="result-icon"><i class="fa-solid ${icon}"></i></div>
+                <div class="result-info">
+                    <h5>${item.title || item.request.substring(0, 30) + '...'}</h5>
+                    <p>${item.speaker || item.user_name || 'Ministry Update'}</p>
+                </div>
+            `;
+            group.appendChild(div);
+        });
+        content.appendChild(group);
+    }
+})();
