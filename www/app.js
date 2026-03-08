@@ -184,27 +184,27 @@ window.showStatus = showToast;
         
         /* Eclipse Loader Styles */
         .eclipse-container {
-            width: 200px;
-            height: 200px;
+            width: 100px;
+            height: 100px;
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .eclipse-logo {
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             object-fit: contain;
             z-index: 2;
-            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+            filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4));
         }
         .eclipse-ring {
             position: absolute;
-            width: 160px;
-            height: 160px;
+            width: 85px;
+            height: 85px;
             border-radius: 50%;
-            box-shadow: 0 4px 0 0 #d4af37;
+            box-shadow: 0 3px 0 0 #d4af37;
             animation: eclipse-spin 1s linear infinite;
             z-index: 1;
         }
