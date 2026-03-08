@@ -38,6 +38,18 @@ app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISO
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '')));
 
+// Admin Authentication Middleware
+const requireAdmin = (req, res, next) => {
+    // In a real app this would use JWTs, but since it's a simple setup
+    // we use a static token check that the frontend sends when logged in.
+    const token = req.headers['authorization'];
+    if (token === 'Bearer AGAPE_ADMIN_SECRET_2026') {
+        next();
+    } else {
+        res.status(401).json({ error: 'Unauthorized. Admin access required.' });
+    }
+};
+
 // Initialize MongoDB
 const mongoURI = 'mongodb+srv://abhilashdurgam0_db_user:KZOl6ANdJdt1Jr1W@cluster0.jppct2m.mongodb.net/agapeministries?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoURI)
@@ -78,7 +90,7 @@ async function initializeDefaultSettings() {
 }
 
 // --- Upload Route ---
-app.post('/api/upload', upload.single('image'), (req, res) => {
+app.post('/api/upload', requireAdmin, upload.single('image'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     // Secure URL natively provided by Cloudinary
     res.json({ url: req.file.path });
@@ -94,7 +106,7 @@ app.get('/api/settings', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/settings', async (req, res) => {
+app.post('/api/settings', requireAdmin, async (req, res) => {
     try {
         const settings = req.body;
         for (const [key, value] of Object.entries(settings)) {
@@ -112,7 +124,7 @@ app.get('/api/events', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/events', async (req, res) => {
+app.post('/api/events', requireAdmin, async (req, res) => {
     try {
         const event = new Event(req.body);
         await event.save();
@@ -120,14 +132,14 @@ app.post('/api/events', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/events/:id', async (req, res) => {
+app.delete('/api/events/:id', requireAdmin, async (req, res) => {
     try {
         await Event.findByIdAndDelete(req.params.id);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/events/:id', async (req, res) => {
+app.put('/api/events/:id', requireAdmin, async (req, res) => {
     try {
         await Event.findByIdAndUpdate(req.params.id, req.body);
         res.json({ success: true });
@@ -142,7 +154,7 @@ app.get('/api/sermons', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/sermons', async (req, res) => {
+app.post('/api/sermons', requireAdmin, async (req, res) => {
     try {
         const sermon = new Sermon(req.body);
         await sermon.save();
@@ -150,14 +162,14 @@ app.post('/api/sermons', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/sermons/:id', async (req, res) => {
+app.delete('/api/sermons/:id', requireAdmin, async (req, res) => {
     try {
         await Sermon.findByIdAndDelete(req.params.id);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/sermons/:id', async (req, res) => {
+app.put('/api/sermons/:id', requireAdmin, async (req, res) => {
     try {
         await Sermon.findByIdAndUpdate(req.params.id, req.body);
         res.json({ success: true });
@@ -193,6 +205,17 @@ app.delete('/api/prayers/:id', async (req, res) => {
     try {
         await Prayer.findByIdAndDelete(req.params.id);
         res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/prayers/:id/pray', async (req, res) => {
+    try {
+        const prayer = await Prayer.findByIdAndUpdate(
+            req.params.id, 
+            { $inc: { praying_count: 1 } }, 
+            { new: true }
+        );
+        res.json({ success: true, praying_count: prayer.praying_count });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

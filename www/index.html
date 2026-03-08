@@ -64,22 +64,27 @@
             <div class="section-title">
                 <h2>Upcoming Service</h2>
             </div>
-            <a href="live.html" style="text-decoration: none; color: inherit;">
-                <div class="glass media-card animate-in" style="height: 250px;">
-                    <img id="live_thumb" src="https://img.youtube.com/vi/HOuTe90NEeQ/maxresdefault.jpg"
-                        alt="Latest Service" style="width: 100%; height: 100%; object-fit: cover;">
+            <a href="live.html" style="text-decoration: none; color: inherit; display: block;">
+                <div class="glass media-card animate-in"
+                    style="height: 220px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;">
+                    <img id="live_thumb" src="assets/sermons-preview.png" alt="Latest Service"
+                        style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="play-overlay" style="opacity: 1;">
                         <i class="fa-solid fa-play"></i>
                     </div>
                     <div style="position: absolute; top: 15px; left: 15px;">
-                        <span class="badge" style="background: #ff4757; color: white;">LIVE SOON</span>
-                    </div>
-                    <div class="media-info">
-                        <h3 id="church_name_banner" class="serif" style="font-size: 1.4rem;">The Power of Grace</h3>
-                        <p style="font-size: 0.9rem; opacity: 0.8;">Sunday Service • Watch Previous Live</p>
+                        <span class="badge" style="color: white;">LIVE SOON</span>
                     </div>
                 </div>
             </a>
+            <div class="glass animate-in" style="border-top-left-radius: 0; border-top-right-radius: 0; padding: 20px;">
+                <h3 id="church_name_banner" class="serif" style="font-size: 1.4rem; margin-bottom: 5px;">The Power of
+                    Grace</h3>
+                <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 15px;">Sunday Service • Watch Live</p>
+                <a href="live.html" class="btn"
+                    style="text-decoration: none; display: block; padding: 12px; font-size: 0.95rem; text-align: center; width: 100%;">Enter
+                    Live Room</a>
+            </div>
         </section>
 
         <!-- Quick Actions -->
@@ -93,10 +98,11 @@
                     <i class="fa-solid fa-hands-praying" style="font-size: 2rem; color: var(--primary-gold);"></i>
                     <p style="font-weight: 600;">Prayer</p>
                 </a>
-                <div class="glass service-card" style="min-width: 160px; align-items: center; text-align: center;">
+                <a href="giving.html" class="glass service-card"
+                    style="min-width: 160px; align-items: center; text-align: center; text-decoration: none; color: inherit;">
                     <i class="fa-solid fa-heart" style="font-size: 2rem; color: var(--primary-gold);"></i>
                     <p style="font-weight: 600;">Giving</p>
-                </div>
+                </a>
                 <a href="https://chat.whatsapp.com/CajfmWQUkfcHz4Dnm6UcoP" target="_blank" class="glass service-card"
                     style="min-width: 160px; align-items: center; text-align: center; text-decoration: none; color: inherit;">
                     <i class="fa-solid fa-users" style="font-size: 2rem; color: var(--primary-gold);"></i>
@@ -112,10 +118,10 @@
                 <a href="sermons.html">See All</a>
             </div>
             <div class="media-grid">
-                <a href="https://youtube.com/@agapegospelministries2003?si=8IHO6zC2QKy3QpI7" target="_blank"
+                <a href="https://www.youtube.com/live/HOuTe90NEeQ?si=ZFZhmywMuHIKuy_y" target="_blank"
                     style="text-decoration: none; color: inherit;">
                     <div class="media-card glass">
-                        <img src="assets/sermons-preview.png" alt="Sermon thumbnail">
+                        <img src="https://img.youtube.com/vi/HOuTe90NEeQ/maxresdefault.jpg" alt="Sermon thumbnail">
                         <div class="media-info">
                             <h4 class="serif">Latest Message</h4>
                             <p style="font-size: 0.8rem; opacity: 0.7;">Watch on YouTube</p>
@@ -177,7 +183,19 @@
                 }
                 if (s.mission_statement) document.getElementById('mission_statement').innerText = s.mission_statement;
                 if (s.location_name) document.getElementById('location_name').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${s.location_name}`;
-                if (s.live_thumbnail) document.getElementById('live_thumb').src = s.live_thumbnail;
+
+                // Automatically extract the YouTube thumbnail if available
+                let thumbSrc = s.live_thumbnail;
+                if (!thumbSrc && s.live_video_url) {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+                    const match = s.live_video_url.match(regExp);
+                    const videoId = (match && match[2].length === 11) ? match[2] : null;
+                    if (videoId) thumbSrc = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+                }
+
+                if (!thumbSrc) thumbSrc = 'assets/sermons-preview.png'; // Fail-safe fallback
+                if (thumbSrc) document.getElementById('live_thumb').src = thumbSrc;
+
                 if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
 
                 if (isAdmin) {
@@ -222,7 +240,12 @@
                         input.onchange = async () => {
                             const formData = new FormData();
                             formData.append('image', input.files[0]);
-                            const uploadRes = await fetch('https://project-agm.onrender.com/api/upload', { method: 'POST', body: formData });
+                            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+                            const uploadRes = await fetch('https://project-agm.onrender.com/api/upload', {
+                                method: 'POST',
+                                headers: { 'Authorization': token },
+                                body: formData
+                            });
                             const uploadData = await uploadRes.json();
                             if (uploadData.url) updateSetting(settingKey, uploadData.url);
                         };
@@ -241,9 +264,13 @@
 
         async function updateSetting(key, value) {
             const data = {}; data[key] = value;
+            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
             await fetch('https://project-agm.onrender.com/api/settings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
                 body: JSON.stringify(data)
             });
             window.location.reload();

@@ -107,6 +107,9 @@
 
                 prayers.forEach((prayer) => {
                     const isOwner = localStorage.getItem(`my_prayer_${prayer.id}`);
+                    const hasPrayed = localStorage.getItem(`prayed_for_${prayer.id}`);
+                    const prayCount = prayer.praying_count || 0;
+
                     container.innerHTML += `
                         <div class="glass prayer-card animate-in" style="margin-bottom: 15px; padding: 20px; border-radius: 20px; position:relative;">
                             <div class="prayer-meta" style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.6; margin-bottom: 10px;">
@@ -114,10 +117,15 @@
                                 <span>${timeAgo(prayer.created_at)}</span>
                             </div>
                             <div class="prayer-text" style="font-size: 1rem; line-height: 1.4;">"${prayer.request}"</div>
+                            <div style="display: flex; gap: 10px; margin-top: 15px; align-items: center;">
+                                <button onclick="prayFor('${prayer.id}')" id="btn-pray-${prayer.id}" class="btn" style="padding: 5px 12px; font-size: 0.8rem; background: ${hasPrayed ? 'var(--primary-gold)' : 'rgba(212, 175, 55, 0.1)'}; border: 1px solid var(--primary-gold); color: ${hasPrayed ? 'var(--primary-dark)' : 'var(--primary-gold)'};">
+                                    <i class="fa-solid fa-hands-praying"></i> <span id="text-pray-${prayer.id}">${hasPrayed ? 'Praying' : 'Pray'}</span> (<span id="count-pray-${prayer.id}">${prayCount}</span>)
+                                </button>
+                            </div>
                             ${isOwner ? `
-                                <div style="display:flex; gap: 10px; margin-top: 15px;">
-                                    <button onclick="editPrayer(${prayer.id}, '${prayer.request.replace(/'/g, "\\'")}')" class="btn" style="padding: 5px 12px; font-size: 0.7rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);"><i class="fa-solid fa-pen"></i> Edit</button>
-                                    <button onclick="deletePrayer(${prayer.id})" class="btn" style="padding: 5px 12px; font-size: 0.7rem; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.2); color: #ff4757;"><i class="fa-solid fa-trash"></i> Delete</button>
+                                <div style="display:flex; gap: 10px; margin-top: 10px;">
+                                    <button onclick="editPrayer('${prayer.id}', '${prayer.request.replace(/'/g, "\\'")}')" class="btn" style="padding: 5px 12px; font-size: 0.7rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);"><i class="fa-solid fa-pen"></i> Edit</button>
+                                    <button onclick="deletePrayer('${prayer.id}')" class="btn" style="padding: 5px 12px; font-size: 0.7rem; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.2); color: #ff4757;"><i class="fa-solid fa-trash"></i> Delete</button>
                                 </div>
                             ` : ''}
                         </div>
@@ -125,6 +133,34 @@
                 });
             } catch (error) {
                 console.error("Load failed", error);
+            }
+        }
+
+        async function prayFor(id) {
+            if (localStorage.getItem(`prayed_for_${id}`)) {
+                alert('You are already praying for this need.');
+                return;
+            }
+
+            const btn = document.getElementById(`btn-pray-${id}`);
+            const textSpan = document.getElementById(`text-pray-${id}`);
+            const countSpan = document.getElementById(`count-pray-${id}`);
+
+            // Optimistic update
+            btn.style.background = 'var(--primary-gold)';
+            btn.style.color = 'var(--primary-dark)';
+            textSpan.innerText = 'Praying';
+            countSpan.innerText = parseInt(countSpan.innerText) + 1;
+            localStorage.setItem(`prayed_for_${id}`, 'true');
+
+            try {
+                const res = await fetch(`https://project-agm.onrender.com/api/prayers/${id}/pray`, { method: 'POST' });
+                if (res.ok) {
+                    const data = await res.json();
+                    countSpan.innerText = data.praying_count; // Sync with real count
+                }
+            } catch (error) {
+                console.error('Failed to update prayer count', error);
             }
         }
 

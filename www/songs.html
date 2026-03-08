@@ -160,7 +160,11 @@
 
             async function deleteSongNow(id) {
                 if (!confirm('Delete this song from the book?')) return;
-                await fetch(`https://project-agm.onrender.com/api/sermons/${id}`, { method: 'DELETE' });
+                const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+                await fetch(`https://project-agm.onrender.com/api/sermons/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': token }
+                });
                 loadSongs();
             }
         </script>
