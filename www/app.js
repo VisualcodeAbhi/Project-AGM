@@ -218,10 +218,8 @@ window.showStatus = showToast;
     // Create the overlay DOM element
     const loaderOverlay = document.createElement('div');
     loaderOverlay.id = 'server-wakeup-loader';
-    // ALWAYS force show loader on startup immediately
+    // ALWAYS force show loader on startup immediately via class
     loaderOverlay.classList.add('active');
-    loaderOverlay.style.display = 'flex'; 
-    loaderOverlay.style.opacity = '1';
 
     loaderOverlay.innerHTML = `
         <div class="eclipse-container">
