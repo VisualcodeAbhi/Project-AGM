@@ -218,9 +218,10 @@ window.showStatus = showToast;
     // Create the overlay DOM element
     const loaderOverlay = document.createElement('div');
     loaderOverlay.id = 'server-wakeup-loader';
-    // Show by default if on a page that needs API data
-    const isMainPage = window.location.pathname.includes('index.html') || window.location.pathname === '/' || window.location.pathname === '';
-    if (isMainPage) loaderOverlay.classList.add('active');
+    // ALWAYS force show loader on startup immediately
+    loaderOverlay.classList.add('active');
+    loaderOverlay.style.display = 'flex'; 
+    loaderOverlay.style.opacity = '1';
 
     loaderOverlay.innerHTML = `
         <div class="eclipse-container">
