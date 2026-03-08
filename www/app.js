@@ -100,22 +100,33 @@ async function shareToWhatsApp() {
     }
 }
 
-// --- Offline Loader Logic ---
-function setupOfflineLoader() {
-    const overlay = document.createElement('div');
-    overlay.id = 'offline-overlay';
-    overlay.className = navigator.onLine ? 'hidden' : '';
-    overlay.innerHTML = `
-        <i class="fa-solid fa-wifi offline-icon"></i>
-        <h2 style="font-family: 'Playfair Display', serif; font-size:1.8rem;">No Internet</h2>
-        <p style="opacity: 0.8; margin-top: 10px;">Please check your connection and try again.</p>
-    `;
-    document.body.appendChild(overlay);
+// --- Global Connection & Offline Loader ---
+function setupAppBootLoader() {
+    const overlay = document.getElementById('server-wakeup-loader');
+    if (!overlay) return;
 
-    window.addEventListener('online', () => overlay.classList.add('hidden'));
-    window.addEventListener('offline', () => overlay.classList.remove('hidden'));
+    const updateStatus = () => {
+        const text = overlay.querySelector('p');
+        const title = overlay.querySelector('h2');
+        
+        if (!navigator.onLine) {
+            overlay.classList.add('active');
+            if (title) title.innerText = "No Connection";
+            if (text) text.innerText = "Please check your internet and try again.";
+        } else {
+            // If online, let the fetch interceptor handle the "Waking up" message
+            if (title) title.innerText = "Agape Gospel Ministries";
+            if (text) text.innerText = "Connecting to the server, please wait...";
+            
+            // If we are currently NOT waiting for an API (activeApiRequests === 0), it will hide automatically
+        }
+    };
+
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    updateStatus();
 }
-document.addEventListener('DOMContentLoaded', setupOfflineLoader);
+document.addEventListener('DOMContentLoaded', setupAppBootLoader);
 
 // Custom Notification System
 function showToast(message, type = 'info') {
@@ -207,6 +218,10 @@ window.showStatus = showToast;
     // Create the overlay DOM element
     const loaderOverlay = document.createElement('div');
     loaderOverlay.id = 'server-wakeup-loader';
+    // Show by default if on a page that needs API data
+    const isMainPage = window.location.pathname.includes('index.html') || window.location.pathname === '/' || window.location.pathname === '';
+    if (isMainPage) loaderOverlay.classList.add('active');
+
     loaderOverlay.innerHTML = `
         <div class="eclipse-container">
             <img src="assets/church-logo.png" class="eclipse-logo">
@@ -221,6 +236,7 @@ window.showStatus = showToast;
     const originalFetch = window.fetch;
     let activeApiRequests = 0;
     let wakeupLoaderTimeout = null;
+    let initialDataLoaded = false;
 
     window.fetch = async function(...args) {
         const urlObj = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url);
@@ -230,21 +246,28 @@ window.showStatus = showToast;
         if (isApi) {
             activeApiRequests++;
             if (activeApiRequests === 1) {
-                // If it takes more than 1000ms, assume the server is sleeping and show the loader
+                // Keep loader visible for background API calls
                 wakeupLoaderTimeout = setTimeout(() => {
                     loaderOverlay.classList.add('active');
-                }, 1000);
+                }, 800);
             }
         }
         
         try {
-            return await originalFetch.apply(this, args);
+            const response = await originalFetch.apply(this, args);
+            if (isApi) initialDataLoaded = true;
+            return response;
+        } catch (err) {
+            throw err;
         } finally {
             if (isApi) {
                 activeApiRequests--;
                 if (activeApiRequests === 0) {
                     clearTimeout(wakeupLoaderTimeout);
-                    loaderOverlay.classList.remove('active');
+                    // Hide only if we are online. If offline, the offline handler keeps it.
+                    if (navigator.onLine) {
+                        loaderOverlay.classList.remove('active');
+                    }
                 }
             }
         }
