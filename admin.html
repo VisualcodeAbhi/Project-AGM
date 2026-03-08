@@ -556,14 +556,10 @@
         }
 
         function getEmbedUrl(url) {
-            let videoId = '';
-            if (url.includes('v=')) {
-                videoId = url.split('v=')[1].split('&')[0];
-            } else if (url.includes('youtu.be/')) {
-                videoId = url.split('youtu.be/')[1].split('?')[0];
-            } else if (url.includes('embed/')) {
-                videoId = url.split('embed/')[1].split('?')[0];
-            }
+            if (!url) return '';
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            const videoId = (match && match[2].length === 11) ? match[2] : null;
             return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
         }
 
@@ -581,15 +577,10 @@
         async function saveSermon() {
             const id = document.getElementById('sermonId').value;
             const videoUrl = document.getElementById('sermonVideoUrl').value;
-            let videoId = '';
 
-            if (videoUrl.includes('v=')) {
-                videoId = videoUrl.split('v=')[1].split('&')[0];
-            } else if (videoUrl.includes('youtu.be/')) {
-                videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
-            } else if (videoUrl.includes('embed/')) {
-                videoId = videoUrl.split('embed/')[1].split('?')[0];
-            }
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = videoUrl.match(regExp);
+            const videoId = (match && match[2].length === 11) ? match[2] : null;
 
             const thumbnail = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : 'assets/default-song-thumb.png';
 
