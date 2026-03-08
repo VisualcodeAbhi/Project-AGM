@@ -271,4 +271,13 @@ window.showStatus = showToast;
             }
         }
     };
+
+    // --- Boot-up Fail-Safe ---
+    // In case there's a page that makes no API calls, or a network failure
+    // that doesn't trigger our interceptor, automatically hide after 3 seconds.
+    setTimeout(() => {
+        if (activeApiRequests === 0) {
+            loaderOverlay.classList.remove('active');
+        }
+    }, 3000);
 })();

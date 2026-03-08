@@ -185,6 +185,13 @@
 
     <script src="app.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initial fetch to sync with global server wakeup loader
+            try {
+                await fetch('https://project-agm.onrender.com/api/settings');
+            } catch (e) { console.error(e); }
+        });
+
         let selectedLanguage = 'english';
         let currentTestament = 'OT';
         let currentBookData = null;
