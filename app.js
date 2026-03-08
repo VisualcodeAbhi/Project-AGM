@@ -248,7 +248,7 @@ window.showStatus = showToast;
                 // Keep loader visible for background API calls
                 wakeupLoaderTimeout = setTimeout(() => {
                     loaderOverlay.classList.add('active');
-                }, 800);
+                }, 300);
             }
         }
         
@@ -273,11 +273,10 @@ window.showStatus = showToast;
     };
 
     // --- Boot-up Fail-Safe ---
-    // In case there's a page that makes no API calls, or a network failure
-    // that doesn't trigger our interceptor, automatically hide after 3 seconds.
+    // automatically hide after 1 second if no API calls are active
     setTimeout(() => {
         if (activeApiRequests === 0) {
             loaderOverlay.classList.remove('active');
         }
-    }, 3000);
+    }, 1000);
 })();
