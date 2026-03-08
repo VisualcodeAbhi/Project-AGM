@@ -170,17 +170,13 @@ window.showStatus = showToast;
             display: flex;
             opacity: 1;
         }
-        .wakeup-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(212, 175, 55, 0.2);
-            border-top-color: #d4af37;
-            border-radius: 50%;
-            animation: wakeup-spin 1s linear infinite;
+        .wakeup-video {
+            width: 250px;
+            max-width: 80%;
+            border-radius: 20px;
             margin-bottom: 25px;
-        }
-        @keyframes wakeup-spin {
-            100% { transform: rotate(360deg); }
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            object-fit: cover;
         }
     `;
     document.head.appendChild(style);
@@ -189,7 +185,9 @@ window.showStatus = showToast;
     const loaderOverlay = document.createElement('div');
     loaderOverlay.id = 'server-wakeup-loader';
     loaderOverlay.innerHTML = `
-        <div class="wakeup-spinner"></div>
+        <video class="wakeup-video" autoplay loop muted playsinline>
+            <source src="assets/loader.mp4" type="video/mp4">
+        </video>
         <h2 style="font-family: 'Playfair Display', serif; font-size:1.8rem; margin-bottom: 10px; color: #d4af37;">Connecting...</h2>
         <p style="opacity: 0.8; font-size: 0.95rem; max-width: 80%;">Waking up the server.<br>This usually takes about 1-2 minutes on the first load, please wait...</p>
     `;
