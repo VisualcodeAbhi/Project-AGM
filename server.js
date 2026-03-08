@@ -72,6 +72,9 @@ const Sermon = mongoose.model('Sermon', SermonSchema);
 const PrayerSchema = new mongoose.Schema({ user_name: { type: String, default: 'Anonymous' }, request: String, praying_count: { type: Number, default: 0 } }, { timestamps: true });
 const Prayer = mongoose.model('Prayer', PrayerSchema);
 
+const MessageSchema = new mongoose.Schema({ name: String, phone: String, subject: String, content: String }, { timestamps: true });
+const Message = mongoose.model('Message', MessageSchema);
+
 async function initializeDefaultSettings() {
     const defaults = [
         ['church_name', 'Agape Gospel Ministries'],
@@ -216,6 +219,29 @@ app.post('/api/prayers/:id/pray', async (req, res) => {
             { new: true }
         );
         res.json({ success: true, praying_count: prayer.praying_count });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// --- Messages (Contact Form) ---
+app.post('/api/messages', async (req, res) => {
+    try {
+        const msg = new Message(req.body);
+        await msg.save();
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/messages', requireAdmin, async (req, res) => {
+    try {
+        const msgs = await Message.find().sort({ createdAt: -1 });
+        res.json(msgs.map(m => ({ ...m.toObject(), id: m._id })));
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/messages/:id', requireAdmin, async (req, res) => {
+    try {
+        await Message.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
