@@ -146,3 +146,85 @@ function showToast(message, type = 'info') {
 // Global alert replacement
 window.showStatus = showToast;
 
+// --- Global Server Connection Loader for Cold Starts ---
+(function initServerWakeupLoader() {
+    // Inject styles automatically
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #server-wakeup-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 25, 47, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fdfaf5;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        #server-wakeup-loader.active {
+            display: flex;
+            opacity: 1;
+        }
+        .wakeup-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(212, 175, 55, 0.2);
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: wakeup-spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+        @keyframes wakeup-spin {
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Create the overlay DOM element
+    const loaderOverlay = document.createElement('div');
+    loaderOverlay.id = 'server-wakeup-loader';
+    loaderOverlay.innerHTML = `
+        <div class="wakeup-spinner"></div>
+        <h2 style="font-family: 'Playfair Display', serif; font-size:1.8rem; margin-bottom: 10px; color: #d4af37;">Connecting...</h2>
+        <p style="opacity: 0.8; font-size: 0.95rem; max-width: 80%;">Waking up the server.<br>This usually takes about 1-2 minutes on the first load, please wait...</p>
+    `;
+    document.body.appendChild(loaderOverlay);
+
+    // Intercept fetch requests
+    const originalFetch = window.fetch;
+    let activeApiRequests = 0;
+    let wakeupLoaderTimeout = null;
+
+    window.fetch = async function(...args) {
+        const urlObj = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url);
+        const urlStr = urlObj ? String(urlObj) : '';
+        const isApi = urlStr.includes('/api/') || urlStr.includes('/settings');
+
+        if (isApi) {
+            activeApiRequests++;
+            if (activeApiRequests === 1) {
+                // If it takes more than 1000ms, assume the server is sleeping and show the loader
+                wakeupLoaderTimeout = setTimeout(() => {
+                    loaderOverlay.classList.add('active');
+                }, 1000);
+            }
+        }
+        
+        try {
+            return await originalFetch.apply(this, args);
+        } finally {
+            if (isApi) {
+                activeApiRequests--;
+                if (activeApiRequests === 0) {
+                    clearTimeout(wakeupLoaderTimeout);
+                    loaderOverlay.classList.remove('active');
+                }
+            }
+        }
+    };
+})();
