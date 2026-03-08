@@ -628,7 +628,7 @@
         }
 
         async function deleteItem(type, id) {
-            const confirmed = await askUser('Confirm Delete', 'Are you sure you want to remove this item?');
+            const confirmed = confirm('Are you sure you want to remove this item?');
             if (!confirmed) return;
 
             try {
