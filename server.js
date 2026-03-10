@@ -6,10 +6,23 @@ const fs = require('fs');
 const multer = require('multer');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const admin = require('firebase-admin');
 
 const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
+
+// Initialize Firebase Admin (Only if service account is provided)
+const serviceAccountPath = path.join(__dirname, 'agape-firebase-adminsdk.json');
+if (fs.existsSync(serviceAccountPath)) {
+    const serviceAccount = require(serviceAccountPath);
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+    console.log('Firebase Admin Initialized.');
+} else {
+    console.warn('Firebase Service Account not found. Push notifications will be skipped.');
+}
 
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -85,6 +98,34 @@ const Prayer = mongoose.model('Prayer', PrayerSchema);
 const MessageSchema = new mongoose.Schema({ name: String, phone: String, subject: String, content: String }, { timestamps: true });
 const Message = mongoose.model('Message', MessageSchema);
 
+const DeviceTokenSchema = new mongoose.Schema({ token: { type: String, unique: true } }, { timestamps: true });
+const DeviceToken = mongoose.model('DeviceToken', DeviceTokenSchema);
+
+async function sendPushNotification(title, body, data = {}) {
+    console.log(`[Push Notification] ${title}: ${body}`);
+    const tokens = await DeviceToken.find();
+    if (tokens.length === 0) return;
+
+    const registrationTokens = tokens.map(t => t.token);
+    const message = {
+        notification: { title, body },
+        data,
+        tokens: registrationTokens,
+    };
+
+    if (admin.apps.length > 0) {
+        try {
+            const response = await admin.messaging().sendMulticast(message);
+            console.log(`${response.successCount} messages were sent successfully`);
+            if (response.failureCount > 0) {
+                // Optionally cleanup failed tokens
+            }
+        } catch (error) {
+            console.error('Error sending push notification:', error);
+        }
+    }
+}
+
 async function initializeDefaultSettings() {
     const defaults = [
         ['church_name', 'Agape Gospel Ministries'],
@@ -122,9 +163,30 @@ app.get('/api/settings', async (req, res) => {
 app.post('/api/settings', requireAdmin, async (req, res) => {
     try {
         const settings = req.body;
+        let notifyLive = false;
+        let notifyVerse = false;
+
         for (const [key, value] of Object.entries(settings)) {
+            const old = await Setting.findOne({ key });
+            if (old && old.value !== value) {
+                if (key === 'live_video_url') notifyLive = true;
+                if (key === 'daily_verse_img') notifyVerse = true;
+            }
             await Setting.updateOne({ key }, { value }, { upsert: true });
         }
+
+        if (notifyLive) sendPushNotification("Agape Live", "The Ministry is starting a Live Broadcast! Tap to join.");
+        if (notifyVerse) sendPushNotification("Daily Word", "Today's precious promise is available. Come and be blessed!");
+
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/register-device', async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(400).json({ error: 'Token required' });
+        await DeviceToken.updateOne({ token }, { token }, { upsert: true });
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -141,6 +203,7 @@ app.post('/api/events', requireAdmin, async (req, res) => {
     try {
         const event = new Event(req.body);
         await event.save();
+        sendPushNotification("New Event", `A new event "${event.title}" has been added. Don't miss out!`);
         res.json({ ...event.toObject(), id: event._id });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -203,6 +266,10 @@ app.post('/api/prayers', async (req, res) => {
         if (!request) return res.status(400).json({ error: 'Request required' });
         const prayer = new Prayer({ user_name: userName || 'Anonymous', request, praying_count: 0 });
         await prayer.save();
+        
+        // Notify others about new prayer request
+        sendPushNotification("New Prayer Request", `${prayer.user_name} shared a need. Let's pray together.`);
+        
         res.json({ id: prayer._id, userName: prayer.user_name, request: prayer.request, praying_count: 0, created_at: prayer.createdAt });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

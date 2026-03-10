@@ -280,3 +280,38 @@ window.showStatus = showToast;
         }
     }, 1000);
 })();
+
+// --- Mobile Push Notifications Registration ---
+async function setupPushNotifications() {
+    if (!window.Capacitor) return; // Only run on mobile
+
+    const { PushNotifications } = window.Capacitor.Plugins;
+
+    let permStatus = await PushNotifications.checkPermissions();
+    if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+    }
+
+    if (permStatus.receive !== 'granted') return;
+
+    await PushNotifications.register();
+
+    PushNotifications.addListener('registration', async (token) => {
+        console.log('Push Token:', token.value);
+        await fetch('https://project-agm.onrender.com/api/register-device', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token.value })
+        });
+    });
+
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('Notification received:', notification);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.Capacitor) {
+        setupPushNotifications();
+    }
+});
