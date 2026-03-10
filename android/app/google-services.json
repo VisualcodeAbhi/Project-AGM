@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "608381535609",
+    "project_id": "agape-gospel-ministries",
+    "storage_bucket": "agape-gospel-ministries.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608381535609:android:205755602e54f75e0e5ba8",
+        "android_client_info": {
+          "package_name": "com.agape.ministry"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhoBNJ2c6g2M_c9_Jrm7wL0WmloMVQZ_I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
