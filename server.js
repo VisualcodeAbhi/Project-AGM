@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -29,6 +30,15 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage: storage });
+
+// Email Transporter (Nodemailer)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER || 'agapegospelministries2003@gmail.com',
+        pass: process.env.EMAIL_PASS // This should be a Gmail App Password
+    }
+});
 
 // Middleware
 app.use(cors());
@@ -225,8 +235,34 @@ app.post('/api/prayers/:id/pray', async (req, res) => {
 // --- Messages (Contact Form) ---
 app.post('/api/messages', async (req, res) => {
     try {
-        const msg = new Message(req.body);
+        const { name, phone, subject, content } = req.body;
+        const msg = new Message({ name, phone, subject, content });
         await msg.save();
+
+        // Send Email Notification
+        const mailOptions = {
+            from: `"Agape App" <${process.env.EMAIL_USER || 'agapegospelministries2003@gmail.com'}>`,
+            to: 'agapegospelministries2003@gmail.com',
+            subject: `New Message: ${subject}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #d4af37;">New Website Message</h2>
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+                    <p><strong>Subject:</strong> ${subject}</p>
+                    <hr>
+                    <p><strong>Message:</strong></p>
+                    <p style="background: #f9f9f9; padding: 15px; border-left: 4px solid #d4af37;">${content}</p>
+                    <p style="font-size: 0.8rem; color: #888; margin-top: 30px;">Sent via Agape Gospel Ministries Mobile App</p>
+                </div>
+            `
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) console.error('Email error:', error);
+            else console.log('Email sent:', info.response);
+        });
+
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
