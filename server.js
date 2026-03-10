@@ -136,7 +136,11 @@ async function initializeDefaultSettings() {
         ['email', 'agapegospelministries2003@gmail.com'],
         ['live_video_url', 'https://www.youtube.com/embed/HOuTe90NEeQ'],
         ['live_thumbnail', 'assets/sermons-preview.png'],
-        ['daily_verse_img', 'assets/Daily.jpeg']
+        ['daily_verse_img', 'assets/Daily.jpeg'],
+        ['instagram_url', ''],
+        ['facebook_url', ''],
+        ['youtube_url', ''],
+        ['google_maps_url', '']
     ];
     for (let [key, value] of defaults) {
         await Setting.updateOne({ key }, { $setOnInsert: { value } }, { upsert: true });

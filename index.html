@@ -111,52 +111,29 @@
             </div>
         </section>
 
+        <!-- Social Connections -->
+        <section class="section animate-in" style="animation-delay: 0.35s;">
+            <div class="glass"
+                style="display: flex; justify-content: space-around; padding: 15px; border-radius: 20px;">
+                <a id="link_insta" href="#" target="_blank" style="color: #E1306C; font-size: 1.5rem;"><i
+                        class="fa-brands fa-instagram"></i></a>
+                <a id="link_facebook" href="#" target="_blank" style="color: #4267B2; font-size: 1.5rem;"><i
+                        class="fa-brands fa-facebook"></i></a>
+                <a id="link_youtube" href="#" target="_blank" style="color: #FF0000; font-size: 1.5rem;"><i
+                        class="fa-brands fa-youtube"></i></a>
+                <a id="link_location" href="#" target="_blank" style="color: #34A853; font-size: 1.5rem;"><i
+                        class="fa-solid fa-location-dot"></i></a>
+            </div>
+        </section>
+
         <!-- Recent Sermons -->
         <section class="section animate-in" style="animation-delay: 0.4s;">
             <div class="section-title">
                 <h2>Recent Sermons</h2>
             </div>
-            <div class="media-grid">
-                <a href="https://youtu.be/SF8vBYvV5TE?si=nKfbdLvkhLfAhtXk" target="_blank"
-                    style="text-decoration: none; color: inherit;">
-                    <div class="media-card glass">
-                        <img src="https://img.youtube.com/vi/SF8vBYvV5TE/maxresdefault.jpg" alt="Sermon thumbnail">
-                        <div class="media-info">
-                            <h4 class="serif">Recent Sermon 1</h4>
-                            <p style="font-size: 0.8rem; opacity: 0.7;">Watch on YouTube</p>
-                        </div>
-                    </div>
-                </a>
-                <a href="https://youtu.be/8Hi1WNyS0GI?si=-EN8Tbguem7hNZMn" target="_blank"
-                    style="text-decoration: none; color: inherit;">
-                    <div class="media-card glass">
-                        <img src="https://img.youtube.com/vi/8Hi1WNyS0GI/maxresdefault.jpg" alt="Sermon thumbnail">
-                        <div class="media-info">
-                            <h4 class="serif">Recent Sermon 2</h4>
-                            <p style="font-size: 0.8rem; opacity: 0.7;">Watch on YouTube</p>
-                        </div>
-                    </div>
-                </a>
-                <a href="https://youtu.be/I9EUtuOifds?si=3_wTs0WmdUb0xzmL" target="_blank"
-                    style="text-decoration: none; color: inherit;">
-                    <div class="media-card glass">
-                        <img src="https://img.youtube.com/vi/I9EUtuOifds/maxresdefault.jpg" alt="Sermon thumbnail">
-                        <div class="media-info">
-                            <h4 class="serif">Recent Sermon 3</h4>
-                            <p style="font-size: 0.8rem; opacity: 0.7;">Watch on YouTube</p>
-                        </div>
-                    </div>
-                </a>
-                <a href="https://youtu.be/fyqmMAlGB_4?si=-w3JA4tTpp9Ssjy_" target="_blank"
-                    style="text-decoration: none; color: inherit;">
-                    <div class="media-card glass">
-                        <img src="https://img.youtube.com/vi/fyqmMAlGB_4/maxresdefault.jpg" alt="Sermon thumbnail">
-                        <div class="media-info">
-                            <h4 class="serif">Recent Sermon 4</h4>
-                            <p style="font-size: 0.8rem; opacity: 0.7;">Watch on YouTube</p>
-                        </div>
-                    </div>
-                </a>
+            <div id="recentSermonsContainer" class="media-grid">
+                <!-- Data will be loaded dynamically -->
+                <div style="padding: 20px; text-align: center; opacity: 0.5; width: 100%;">Loading sermons...</div>
             </div>
         </section>
 
@@ -206,45 +183,125 @@
                 const s = await res.json();
                 const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-                if (s.church_name) {
-                    document.getElementById('church_name').innerText = s.church_name;
-                    document.getElementById('church_name_banner').innerText = s.church_name;
-                }
-                if (s.mission_statement) document.getElementById('mission_statement').innerText = s.mission_statement;
-                if (s.location_name) document.getElementById('location_name').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${s.location_name}`;
-
-                // Automatically extract the YouTube thumbnail if available
-                let thumbSrc = s.live_thumbnail;
-                if (!thumbSrc && s.live_video_url) {
-                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
-                    const match = s.live_video_url.match(regExp);
-                    const videoId = (match && match[2].length === 11) ? match[2] : null;
-                    if (videoId) thumbSrc = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-                }
-
-                if (!thumbSrc) thumbSrc = 'assets/sermons-preview.png'; // Fail-safe fallback
-                if (thumbSrc) document.getElementById('live_thumb').src = thumbSrc;
-
                 if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
 
-                if (isAdmin) {
-                    addEditOverlay('church_name', 'church_name');
-                    addEditOverlay('mission_statement', 'mission_statement');
-                    addEditOverlay('location_name', 'location_name');
-                    addEditOverlay('verseImage', 'daily_verse_img', true);
-                    addEditOverlay('live_thumb', 'live_thumbnail', true);
-                    addEditOverlay('church_name_banner', 'church_name');
-                }
+                // Cache for next time
+                localStorage.setItem('cached_settings', JSON.stringify(s));
+                renderSettings(s, isAdmin);
+
+                // Load Dynamic Sermons
+                loadRecentSermons();
             } catch (error) {
                 console.error('Settings load failed:', error);
+                const cached = localStorage.getItem('cached_settings');
+                if (cached) renderSettings(JSON.parse(cached), false);
+
                 // Even if fetch fails, check if we're admin to show the bar/exit
                 const isAdmin = localStorage.getItem('isAdmin') === 'true';
                 if (isAdmin) document.body.style.paddingTop = '40px';
             }
         })();
 
+        // Try to load cached settings immediately for "instant" feel
+        (function initialInstantLoad() {
+            const cached = localStorage.getItem('cached_settings');
+            if (cached) renderSettings(JSON.parse(cached), false);
+            const cachedSermons = localStorage.getItem('cached_sermons');
+            if (cachedSermons) renderSermons(JSON.parse(cachedSermons));
+        })();
+
+        function renderSettings(s, isAdmin) {
+            if (s.church_name) {
+                document.getElementById('church_name').innerText = s.church_name;
+                document.getElementById('church_name_banner').innerText = s.church_name;
+            }
+            if (s.mission_statement) document.getElementById('mission_statement').innerText = s.mission_statement;
+            if (s.location_name) document.getElementById('location_name').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${s.location_name}`;
+
+            let thumbSrc = s.live_thumbnail;
+            if (!thumbSrc && s.live_video_url) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+                const match = s.live_video_url.match(regExp);
+                const videoId = (match && match[2].length === 11) ? match[2] : null;
+                if (videoId) thumbSrc = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+            }
+            if (!thumbSrc) thumbSrc = 'assets/sermons-preview.png';
+            if (thumbSrc) document.getElementById('live_thumb').src = thumbSrc;
+            if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
+
+            // Social Links
+            const insta = document.getElementById('link_insta');
+            if (s.instagram_url) { insta.href = s.instagram_url; insta.style.display = 'block'; } else insta.style.display = 'none';
+            const fb = document.getElementById('link_facebook');
+            if (s.facebook_url) { fb.href = s.facebook_url; fb.style.display = 'block'; } else fb.style.display = 'none';
+            const yt = document.getElementById('link_youtube');
+            if (s.youtube_url) { yt.href = s.youtube_url; yt.style.display = 'block'; } else yt.style.display = 'none';
+            const loc = document.getElementById('link_location');
+            if (s.google_maps_url) { loc.href = s.google_maps_url; loc.style.display = 'block'; } else loc.style.display = 'none';
+
+            if (isAdmin) {
+                // Remove existing overlays to avoid duplicates if re-rendering
+                document.querySelectorAll('.admin-edit-btn').forEach(b => b.remove());
+
+                addEditOverlay('church_name', 'church_name');
+                addEditOverlay('mission_statement', 'mission_statement');
+                addEditOverlay('location_name', 'location_name');
+                addEditOverlay('verseImage', 'daily_verse_img', true);
+                addEditOverlay('live_thumb', 'live_thumbnail', true);
+                addEditOverlay('church_name_banner', 'church_name');
+
+                [insta, fb, yt, loc].forEach(link => {
+                    link.onclick = (e) => {
+                        e.preventDefault();
+                        const key = link.id === 'link_insta' ? 'instagram_url' :
+                            link.id === 'link_facebook' ? 'facebook_url' :
+                                link.id === 'link_youtube' ? 'youtube_url' : 'google_maps_url';
+                        const newVal = prompt(`Enter URL for ${key}:`, link.href);
+                        if (newVal) updateSetting(key, newVal);
+                    };
+                });
+            }
+        }
+
+        async function loadRecentSermons() {
+            try {
+                const res = await fetch('https://project-agm.onrender.com/api/sermons');
+                const sermons = await res.json();
+                localStorage.setItem('cached_sermons', JSON.stringify(sermons));
+                renderSermons(sermons);
+            } catch (e) {
+                console.error(e);
+                const cached = localStorage.getItem('cached_sermons');
+                if (cached) renderSermons(JSON.parse(cached));
+            }
+        }
+
+        function renderSermons(sermons) {
+            const container = document.getElementById('recentSermonsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            sermons.slice(0, 4).forEach(s => {
+                const videoId = s.video_url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|live\/|embed\/))([^?&]+)/)?.[1];
+                const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : 'assets/sermons-preview.png';
+
+                container.innerHTML += `
+                <a href="${s.video_url}" target="_blank" style="text-decoration: none; color: inherit;">
+                    <div class="media-card glass">
+                        <img src="${thumb}" alt="${s.title}">
+                        <div class="media-info">
+                            <h4 class="serif">${s.title}</h4>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">Watch on YouTube</p>
+                        </div>
+                    </div>
+                </a>
+                `;
+            });
+        }
+
         function addEditOverlay(elementId, settingKey, isImage = false) {
             const el = document.getElementById(elementId);
+            if (!el) return;
             const parent = el.parentElement;
             if (window.getComputedStyle(parent).position === 'static') {
                 parent.style.position = 'relative';
