@@ -202,6 +202,32 @@
                     </div>
                 </div>
 
+                <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 30px 0;">
+                <div class="section-title">
+                    <h3>Social Connections</h3>
+                </div>
+
+                <div class="form-row">
+                    <label>Instagram URL</label>
+                    <input type="text" id="set_instagram_url" placeholder="https://instagram.com/yourpage"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Facebook URL</label>
+                    <input type="text" id="set_facebook_url" placeholder="https://facebook.com/yourpage"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>YouTube Channel URL</label>
+                    <input type="text" id="set_youtube_url" placeholder="https://youtube.com/@yourchannel"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Google Maps / Location URL</label>
+                    <input type="text" id="set_google_maps_url" placeholder="https://maps.google.com/..."
+                        class="input-field">
+                </div>
+
                 <button onclick="saveGlobalSettings()" class="btn" style="width: 100%; margin-top: 20px;">Save Global
                     Details</button>
                 <input type="file" id="adminFileInput" style="display: none;" accept="image/*">
@@ -354,7 +380,7 @@
             btn.innerText = "Saving...";
             btn.disabled = true;
 
-            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'daily_verse_img'];
+            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'daily_verse_img', 'instagram_url', 'facebook_url', 'youtube_url', 'google_maps_url'];
             const data = {};
             keys.forEach(k => {
                 const el = document.getElementById('set_' + k);

@@ -130,6 +130,56 @@ function setupAppBootLoader() {
     window.addEventListener('online', updateStatus);
     window.addEventListener('offline', updateStatus);
     updateStatus();
+    
+    // Pull to Refresh logic
+    initPullToRefresh();
+}
+
+function initPullToRefresh() {
+    const ptr = document.getElementById('ptr');
+    const container = document.querySelector('.app-container');
+    if (!ptr || !container) return;
+
+    let startY = 0;
+    let pulling = false;
+
+    window.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0) {
+            startY = e.touches[0].pageY;
+            pulling = true;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!pulling) return;
+        const diff = e.touches[0].pageY - startY;
+        if (diff > 0 && window.scrollY === 0) {
+            ptr.style.height = Math.min(diff * 0.4, 70) + 'px';
+            ptr.querySelector('i').style.transform = `rotate(${diff * 2}deg)`;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+        if (!pulling) return;
+        pulling = false;
+        if (parseInt(ptr.style.height) > 60) {
+            ptr.style.height = '60px';
+            ptr.querySelector('i').classList.add('fa-spin');
+            // Refresh logic: reload current page settings/data
+            if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+                if (typeof loadHomeSettings === 'function') loadHomeSettings();
+                if (typeof loadRecentSermons === 'function') loadRecentSermons();
+            } else {
+                window.location.reload();
+            }
+            setTimeout(() => {
+                ptr.style.height = '0px';
+                ptr.querySelector('i').classList.remove('fa-spin');
+            }, 1500);
+        } else {
+            ptr.style.height = '0px';
+        }
+    });
 }
 document.addEventListener('DOMContentLoaded', setupAppBootLoader);
 

@@ -18,6 +18,7 @@
 <body>
     <div class="app-container">
         <div class="space"></div>
+        <div id="ptr"><i class="fa-solid fa-arrows-rotate"></i></div>
         <!-- Hero Section -->
         <header class="hero-section">
             <div class="founding-badge">Est. 2003</div>
@@ -133,7 +134,9 @@
             </div>
             <div id="recentSermonsContainer" class="media-grid">
                 <!-- Data will be loaded dynamically -->
-                <div style="padding: 20px; text-align: center; opacity: 0.5; width: 100%;">Loading sermons...</div>
+                <div class="media-card skeleton"></div>
+                <div class="media-card skeleton"></div>
+                <div class="media-card skeleton"></div>
             </div>
         </section>
 
@@ -176,7 +179,7 @@
 
     <script src="app.js"></script>
     <script>
-        (async function loadHomeSettings() {
+        window.loadHomeSettings = async function () {
             try {
                 const res = await fetch('https://project-agm.onrender.com/api/settings');
                 if (!res.ok) throw new Error('Failed to fetch settings');
@@ -200,7 +203,8 @@
                 const isAdmin = localStorage.getItem('isAdmin') === 'true';
                 if (isAdmin) document.body.style.paddingTop = '40px';
             }
-        })();
+        };
+        loadHomeSettings();
 
         // Try to load cached settings immediately for "instant" feel
         (function initialInstantLoad() {
@@ -266,7 +270,7 @@
             }
         }
 
-        async function loadRecentSermons() {
+        window.loadRecentSermons = async function () {
             try {
                 const res = await fetch('https://project-agm.onrender.com/api/sermons');
                 const sermons = await res.json();
