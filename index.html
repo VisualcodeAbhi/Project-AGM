@@ -293,9 +293,7 @@
                 document.getElementById('server-wakeup-loader')?.classList.remove('active');
             }
 
-            const sermonList = sermons.filter(s => s.category === 'Sunday');
-
-            sermonList.slice(0, 4).forEach(s => {
+            sermons.slice(0, 4).forEach(s => {
                 const videoId = s.video_url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|live\/|embed\/))([^?&]+)/)?.[1];
                 const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : 'assets/sermons-preview.png';
 
