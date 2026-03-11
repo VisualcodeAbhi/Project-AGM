@@ -37,28 +37,34 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Ignore API requests and non-GET requests completely
-    if (event.request.url.includes('/api/') || event.request.method !== 'GET') {
-        return; // Browser handles this natively
+    // API requests: Network first, then cache
+    if (event.request.url.includes('/api/')) {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    if (response.ok && event.request.method === 'GET') {
+                        const resClone = response.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, resClone));
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
+        );
+        return;
     }
 
-    // For other requests (HTML, JS, CSS), use Network First strategy
+    // Static assets: Stale-While-Revalidate
     event.respondWith(
-        fetch(event.request)
-            .then(response => {
-                // Update cache with the fresh fetched version
-                if (response.ok) {
-                    const resClone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, resClone);
-                    });
+        caches.match(event.request).then((cachedResponse) => {
+            const fetchPromise = fetch(event.request).then((networkResponse) => {
+                if (networkResponse.ok) {
+                    const resClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
                 }
-                return response;
-            })
-            .catch(() => {
-                // Fallback to cache if offline
-                return caches.match(event.request);
-            })
+                return networkResponse;
+            });
+            return cachedResponse || fetchPromise;
+        })
     );
 });
 

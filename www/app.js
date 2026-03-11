@@ -101,6 +101,8 @@ async function shareToWhatsApp() {
 }
 
 // --- Global Connection & Offline Loader ---
+window.appDataLoaded = false; // Will be set to true by index.html when data renders
+
 function setupAppBootLoader() {
     const overlay = document.getElementById('server-wakeup-loader');
     if (!overlay) return;
@@ -114,17 +116,70 @@ function setupAppBootLoader() {
             if (title) title.innerText = "No Connection";
             if (text) text.innerText = "Please check your internet and try again.";
         } else {
-            // If online, let the fetch interceptor handle the "Waking up" message
+            // If already have data, don't show fullscreen loader on reconnect
+            if (window.appDataLoaded) {
+                overlay.classList.remove('active');
+                return;
+            }
+            
             if (title) title.innerText = "Agape Gospel Ministries";
             if (text) text.innerText = "Connecting to the server, please wait...";
-            
-            // If we are currently NOT waiting for an API (activeApiRequests === 0), it will hide automatically
         }
     };
 
     window.addEventListener('online', updateStatus);
     window.addEventListener('offline', updateStatus);
     updateStatus();
+    
+    // Pull to Refresh logic
+    initPullToRefresh();
+}
+
+function initPullToRefresh() {
+    const ptr = document.getElementById('ptr');
+    const container = document.querySelector('.app-container');
+    if (!ptr || !container) return;
+
+    let startY = 0;
+    let pulling = false;
+
+    window.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0) {
+            startY = e.touches[0].pageY;
+            pulling = true;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!pulling) return;
+        const diff = e.touches[0].pageY - startY;
+        if (diff > 0 && window.scrollY === 0) {
+            ptr.style.height = Math.min(diff * 0.4, 70) + 'px';
+            ptr.querySelector('i').style.transform = `rotate(${diff * 2}deg)`;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+        if (!pulling) return;
+        pulling = false;
+        if (parseInt(ptr.style.height) > 60) {
+            ptr.style.height = '60px';
+            ptr.querySelector('i').classList.add('fa-spin');
+            // Refresh logic: reload current page settings/data
+            if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+                if (typeof loadHomeSettings === 'function') loadHomeSettings();
+                if (typeof loadRecentSermons === 'function') loadRecentSermons();
+            } else {
+                window.location.reload();
+            }
+            setTimeout(() => {
+                ptr.style.height = '0px';
+                ptr.querySelector('i').classList.remove('fa-spin');
+            }, 1500);
+        } else {
+            ptr.style.height = '0px';
+        }
+    });
 }
 document.addEventListener('DOMContentLoaded', setupAppBootLoader);
 
@@ -273,12 +328,12 @@ window.showStatus = showToast;
     };
 
     // --- Boot-up Fail-Safe ---
-    // automatically hide after 1 second if no API calls are active
+    // Hide or show based on instant data availability
     setTimeout(() => {
-        if (activeApiRequests === 0) {
+        if (activeApiRequests === 0 || window.appDataLoaded) {
             loaderOverlay.classList.remove('active');
         }
-    }, 1000);
+    }, 500);
 })();
 
 // --- Mobile Push Notifications Registration ---

@@ -151,6 +151,7 @@
                 <button onclick="showTab('events')" id="btn-events" class="tab-btn">Events</button>
                 <button onclick="showTab('sermons')" id="btn-sermons" class="tab-btn">Songs</button>
                 <button onclick="showTab('prayers')" id="btn-prayers" class="tab-btn">Prayers</button>
+                <button onclick="showTab('messages')" id="btn-messages" class="tab-btn">Messages</button>
             </div>
         </header>
 
@@ -199,6 +200,32 @@
                         <button onclick="browseFile('set_daily_verse_img')" class="btn"
                             style="height: 45px; padding: 0 15px; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Browse</button>
                     </div>
+                </div>
+
+                <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 30px 0;">
+                <div class="section-title">
+                    <h3>Social Connections</h3>
+                </div>
+
+                <div class="form-row">
+                    <label>Instagram URL</label>
+                    <input type="text" id="set_instagram_url" placeholder="https://instagram.com/yourpage"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Facebook URL</label>
+                    <input type="text" id="set_facebook_url" placeholder="https://facebook.com/yourpage"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>YouTube Channel URL</label>
+                    <input type="text" id="set_youtube_url" placeholder="https://youtube.com/@yourchannel"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Google Maps / Location URL</label>
+                    <input type="text" id="set_google_maps_url" placeholder="https://maps.google.com/..."
+                        class="input-field">
                 </div>
 
                 <button onclick="saveGlobalSettings()" class="btn" style="width: 100%; margin-top: 20px;">Save Global
@@ -285,6 +312,16 @@
             <div id="prayersList"></div>
         </div>
 
+        <!-- Messages Tab -->
+        <div id="tab-messages" class="admin-tab section">
+            <div class="section-title">
+                <h2>Contact Messages</h2>
+            </div>
+            <div id="messagesList">
+                <!-- Messages load here -->
+            </div>
+        </div>
+
         <div style="text-align: center; padding: 40px;">
             <a href="index.html" style="color: #ff4757; text-decoration: none;">Back to home</a>
         </div>
@@ -300,7 +337,7 @@
         });
 
         async function initDashboard() {
-            const loaders = [loadSettings(), loadEvents(), loadSermons(), loadPrayers()];
+            const loaders = [loadSettings(), loadEvents(), loadSermons(), loadPrayers(), loadMessages()];
             try {
                 await Promise.all(loaders);
                 console.log("All data loaded successfully");
@@ -343,7 +380,7 @@
             btn.innerText = "Saving...";
             btn.disabled = true;
 
-            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'daily_verse_img'];
+            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'daily_verse_img', 'instagram_url', 'facebook_url', 'youtube_url', 'google_maps_url'];
             const data = {};
             keys.forEach(k => {
                 const el = document.getElementById('set_' + k);
@@ -627,6 +664,36 @@
             });
         }
 
+        // MESSAGES
+        async function loadMessages() {
+            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+            const res = await fetch(`${API}/messages`, {
+                headers: { 'Authorization': token }
+            });
+            const data = await res.json();
+            const list = document.getElementById('messagesList');
+            list.innerHTML = '';
+            if (data.length === 0) {
+                list.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">No messages received yet.</p>';
+                return;
+            }
+            data.forEach(m => {
+                list.innerHTML += `
+                    <div class="admin-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div>
+                                <h4 style="color:var(--primary-gold)">${m.subject}</h4>
+                                <small>From: <b>${m.name}</b> (${m.phone || 'No phone'})</small>
+                            </div>
+                            <button onclick="deleteItem('messages', '${m.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <p style="margin-top:10px; font-size:0.9rem; line-height:1.4;">${m.content}</p>
+                        <small style="opacity:0.5; font-size:0.7rem;">Received: ${new Date(m.createdAt).toLocaleString()}</small>
+                    </div>
+                `;
+            });
+        }
+
         async function deleteItem(type, id) {
             const confirmed = confirm('Are you sure you want to remove this item?');
             if (!confirmed) return;
@@ -644,6 +711,7 @@
                     if (type === 'events') loadEvents();
                     if (type === 'sermons') loadSermons();
                     if (type === 'prayers') loadPrayers();
+                    if (type === 'messages') loadMessages();
                 } else {
                     showStatus('Delete failed', 'error');
                 }
