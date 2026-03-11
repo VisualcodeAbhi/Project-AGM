@@ -101,6 +101,8 @@ async function shareToWhatsApp() {
 }
 
 // --- Global Connection & Offline Loader ---
+window.appDataLoaded = false; // Will be set to true by index.html when data renders
+
 function setupAppBootLoader() {
     const overlay = document.getElementById('server-wakeup-loader');
     if (!overlay) return;
@@ -114,11 +116,14 @@ function setupAppBootLoader() {
             if (title) title.innerText = "No Connection";
             if (text) text.innerText = "Please check your internet and try again.";
         } else {
-            // If online, let the fetch interceptor handle the "Waking up" message
+            // If already have data, don't show fullscreen loader on reconnect
+            if (window.appDataLoaded) {
+                overlay.classList.remove('active');
+                return;
+            }
+            
             if (title) title.innerText = "Agape Gospel Ministries";
             if (text) text.innerText = "Connecting to the server, please wait...";
-            
-            // If we are currently NOT waiting for an API (activeApiRequests === 0), it will hide automatically
         }
     };
 
@@ -273,12 +278,12 @@ window.showStatus = showToast;
     };
 
     // --- Boot-up Fail-Safe ---
-    // automatically hide after 1 second if no API calls are active
+    // Hide or show based on instant data availability
     setTimeout(() => {
-        if (activeApiRequests === 0) {
+        if (activeApiRequests === 0 || window.appDataLoaded) {
             loaderOverlay.classList.remove('active');
         }
-    }, 1000);
+    }, 500);
 })();
 
 // --- Mobile Push Notifications Registration ---

@@ -229,6 +229,9 @@
             if (thumbSrc) document.getElementById('live_thumb').src = thumbSrc;
             if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
 
+            window.appDataLoaded = true;
+            document.getElementById('server-wakeup-loader')?.classList.remove('active');
+
             // Social Links
             const insta = document.getElementById('link_insta');
             if (s.instagram_url) { insta.href = s.instagram_url; insta.style.display = 'block'; } else insta.style.display = 'none';
@@ -280,6 +283,11 @@
             const container = document.getElementById('recentSermonsContainer');
             if (!container) return;
             container.innerHTML = '';
+
+            if (sermons.length > 0) {
+                window.appDataLoaded = true;
+                document.getElementById('server-wakeup-loader')?.classList.remove('active');
+            }
 
             sermons.slice(0, 4).forEach(s => {
                 const videoId = s.video_url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|live\/|embed\/))([^?&]+)/)?.[1];
