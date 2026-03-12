@@ -15,26 +15,70 @@
             color: var(--primary-gold);
         }
 
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .book-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .book-card:active {
+            transform: scale(0.95);
+            background: var(--primary-gold);
+            color: black;
+        }
+
         .chapter-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 12px;
             margin-top: 20px;
         }
 
         .chapter-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
         }
 
-        .chapter-card:hover {
+        .chapter-card:active {
             background: var(--primary-gold);
-            color: var(--primary-dark);
+            color: black;
+        }
+
+        .verse-view p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .verse-num {
+            color: var(--primary-gold);
+            font-weight: 700;
+            margin-right: 8px;
+            font-size: 0.9rem;
         }
 
         #bible-container {
@@ -57,7 +101,7 @@
         <div class="space"></div>
         <header class="section"
             style="padding-top: 25px; display: flex; align-items: center; justify-content: space-between;">
-            <a href="index.html" style="color: white; font-size: 1.35rem; padding-left: 10px;">
+            <a href="javascript:void(0)" onclick="goBack()" id="back-btn" style="color: white; font-size: 1.35rem; padding-left: 10px;">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
             <div style="text-align: center; flex: 1; margin-right: 30px;">
@@ -196,6 +240,27 @@
         let currentTestament = 'OT';
         let currentBookData = null;
         let currentChapterNum = 1;
+        let viewStack = ['language']; // language, testament, books, chapters, verses
+
+        function goBack() {
+            if (viewStack.length <= 1) {
+                window.location.href = 'index.html';
+                return;
+            }
+            viewStack.pop();
+            const lastView = viewStack[viewStack.length - 1];
+
+            if (lastView === 'language') resetToLanguage();
+            else if (lastView === 'testament') showTestamentChoice();
+            else if (lastView === 'books') filterBooks(currentTestament, true);
+            else if (lastView === 'chapters') loadChapters(currentBookData, true);
+        }
+
+        function updateStack(view) {
+            if (viewStack[viewStack.length - 1] !== view) {
+                viewStack.push(view);
+            }
+        }
 
         const bibleData = {
             english: {
@@ -270,6 +335,7 @@
             selectedLanguage = lang;
             document.getElementById('language-selection').style.display = 'none';
             document.getElementById('bible-content').style.display = 'block';
+            updateStack('testament');
             showTestamentChoice();
         }
 
@@ -287,11 +353,13 @@
         }
 
         function resetToLanguage() {
+            viewStack = ['language'];
             document.getElementById('language-selection').style.display = 'block';
             document.getElementById('bible-content').style.display = 'none';
         }
 
-        function filterBooks(testament) {
+        function filterBooks(testament, isBack = false) {
+            if (!isBack) updateStack('books');
             currentTestament = testament.toUpperCase();
             const books = bibleData[selectedLanguage][currentTestament];
             const list = document.getElementById('book-list');
@@ -319,10 +387,12 @@
             document.getElementById('breadcrumb-book').style.display = 'none';
         }
 
-        function loadChapters(book) {
+        function loadChapters(book, isBack = false) {
+            if (!isBack) updateStack('chapters');
             currentBookData = book;
             document.getElementById('book-list').style.display = 'none';
             document.getElementById('chapter-list').style.display = 'block';
+            document.getElementById('verse-list').style.display = 'none';
             document.getElementById('selected-book-title').innerText = book.name;
 
             const container = document.getElementById('chapters-container');
@@ -341,7 +411,8 @@
             document.getElementById('breadcrumb-book').onclick = () => loadChapters(book);
         }
 
-        async function loadVerses(chapterNum) {
+        async function loadVerses(chapterNum, isBack = false) {
+            if (!isBack) updateStack('verses');
             currentChapterNum = chapterNum;
             document.getElementById('chapter-list').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
