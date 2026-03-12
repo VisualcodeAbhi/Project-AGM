@@ -15,11 +15,19 @@ const PORT = process.env.PORT || 3000;
 // Initialize Firebase Admin (Only if service account is provided)
 const serviceAccountPath = path.join(__dirname, 'agape-firebase-adminsdk.json');
 if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = require(serviceAccountPath);
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-    console.log('Firebase Admin Initialized.');
+    try {
+        const serviceAccount = require(serviceAccountPath);
+        if (serviceAccount.project_id && serviceAccount.private_key) {
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount)
+            });
+            console.log('Firebase Admin Initialized.');
+        } else {
+            console.warn('Firebase Service Account file found but appears invalid (missing project_id or private_key). Skipping push notifications.');
+        }
+    } catch (err) {
+        console.error('Failed to initialize Firebase Admin:', err.message);
+    }
 } else {
     console.warn('Firebase Service Account not found. Push notifications will be skipped.');
 }
