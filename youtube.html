@@ -226,8 +226,9 @@
                     if (!exists) {
                         videos = [liveVideo, ...videos];
                     } else {
-                        // Move existing to top
-                        videos = [exists, ...videos.filter(v => v.video_url !== settings.live_video_url)];
+                        // Move existing to top and mark as live for display
+                        const featured = { ...exists, isLive: true, title: "🔴 Featured / Live Video" };
+                        videos = [featured, ...videos.filter(v => v.video_url !== settings.live_video_url)];
                     }
                 }
 

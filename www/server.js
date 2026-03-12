@@ -185,10 +185,28 @@ app.post('/api/settings', requireAdmin, async (req, res) => {
         let notifyLive = false;
         let notifyVerse = false;
 
+        // Special logic: If live_video_url is changing, move old one to YoutubeVideo gallery
+        if (settings.live_video_url) {
+            const oldLive = await Setting.findOne({ key: 'live_video_url' });
+            if (oldLive && oldLive.value && oldLive.value !== settings.live_video_url) {
+                notifyLive = true;
+                const oldUrl = oldLive.value;
+                const existsInGallery = await YoutubeVideo.findOne({ video_url: oldUrl });
+                if (!existsInGallery) {
+                    const oldThumb = await Setting.findOne({ key: 'live_thumbnail' });
+                    await new YoutubeVideo({
+                        title: "Past Live Service",
+                        description: "Previously featured live stream",
+                        video_url: oldUrl,
+                        thumbnail_url: oldThumb ? oldThumb.value : ""
+                    }).save();
+                }
+            }
+        }
+
         for (const [key, value] of Object.entries(settings)) {
             const old = await Setting.findOne({ key });
             if (old && old.value !== value) {
-                if (key === 'live_video_url') notifyLive = true;
                 if (key === 'daily_verse_img') notifyVerse = true;
             }
             await Setting.updateOne({ key }, { value }, { upsert: true });
@@ -284,7 +302,10 @@ app.post('/api/youtube-videos', requireAdmin, async (req, res) => {
         const video = new YoutubeVideo(req.body);
         await video.save();
         res.json({ ...video.toObject(), id: video._id });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        console.error('Error saving YouTube video:', err);
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
 app.delete('/api/youtube-videos/:id', requireAdmin, async (req, res) => {
