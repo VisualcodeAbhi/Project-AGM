@@ -140,7 +140,8 @@ async function initializeDefaultSettings() {
         ['instagram_url', ''],
         ['facebook_url', ''],
         ['youtube_url', ''],
-        ['google_maps_url', '']
+        ['google_maps_url', ''],
+        ['daily_devotional_html', '']
     ];
     for (let [key, value] of defaults) {
         await Setting.updateOne({ key }, { $setOnInsert: { value } }, { upsert: true });

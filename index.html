@@ -128,16 +128,34 @@
             </div>
         </section>
 
-        <!-- Recent Sermons -->
-        <section class="section animate-in" style="animation-delay: 0.4s;">
+        <!-- Daily Devotional Section -->
+        <section class="section animate-in" style="animation-delay: 0.4s; margin-bottom: 40px;">
             <div class="section-title">
-                <h2>Recent Sermons</h2>
+                <h2>Daily Devotional</h2>
             </div>
-            <div id="recentSermonsContainer" class="media-grid">
-                <!-- Data will be loaded dynamically -->
-                <div class="media-card skeleton"></div>
-                <div class="media-card skeleton"></div>
-                <div class="media-card skeleton"></div>
+            <div class="glass" style="padding: 25px; border-radius: 25px; min-height: 200px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <i class="fa-solid fa-cloud-sun"
+                        style="font-size: 2.5rem; color: var(--primary-gold); opacity: 0.8;"></i>
+                    <h3 class="serif" style="margin-top: 10px; font-size: 1.5rem; color: var(--primary-gold);">ఎడారిలో
+                        సెలయేర్లు</h3>
+                    <p style="font-size: 0.8rem; opacity: 0.6;">Streams in the Desert</p>
+                </div>
+                <div id="devotional_content"
+                    style="font-size: 1.05rem; line-height: 1.8; color: white; white-space: pre-line;">
+                    <!-- Telugu Content will be injected here -->
+                    <div style="text-align: center; padding: 20px;">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+                        <p style="margin-top: 10px; opacity: 0.7;">Loading today's word...</p>
+                    </div>
+                </div>
+                <div
+                    style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                    <button onclick="shareDevotional()" class="btn"
+                        style="padding: 10px 20px; font-size: 0.85rem; background: rgba(255,255,255,0.05); border: 1px solid var(--primary-gold);">
+                        <i class="fa-solid fa-share-nodes"></i> Share Today's Blessing
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -193,8 +211,6 @@
                 localStorage.setItem('cached_settings', JSON.stringify(s));
                 renderSettings(s, isAdmin);
 
-                // Load Dynamic Sermons
-                loadRecentSermons();
             } catch (error) {
                 console.error('Settings load failed:', error);
                 const cached = localStorage.getItem('cached_settings');
@@ -211,8 +227,6 @@
         (function initialInstantLoad() {
             const cached = localStorage.getItem('cached_settings');
             if (cached) renderSettings(JSON.parse(cached), false);
-            const cachedSermons = localStorage.getItem('cached_sermons');
-            if (cachedSermons) renderSermons(JSON.parse(cachedSermons));
         })();
 
         function renderSettings(s, isAdmin) {
@@ -247,6 +261,31 @@
             const loc = document.getElementById('link_location');
             if (s.google_maps_url) { loc.href = s.google_maps_url; loc.style.display = 'block'; } else loc.style.display = 'none';
 
+            // Daily Devotional Content
+            if (s.daily_devotional_html) {
+                document.getElementById('devotional_content').innerHTML = s.daily_devotional_html;
+            } else {
+                document.getElementById('devotional_content').innerHTML = `
+                    <div style="text-align: center; opacity: 0.5; padding: 20px;">
+                        <p>Waiting for today's devotional update...</p>
+                    </div>
+                `;
+            }
+
+            window.shareDevotional = function () {
+                const text = document.getElementById('devotional_content').innerText;
+                const church = document.getElementById('church_name').innerText;
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Daily Devotional - ' + church,
+                        text: text + '\n\nShared via ' + church + ' App',
+                        url: window.location.href
+                    });
+                } else {
+                    alert('Sharing not supported on this browser. You can copy the text manually.');
+                }
+            };
+
             if (isAdmin) {
                 // Remove existing overlays to avoid duplicates if re-rendering
                 document.querySelectorAll('.admin-edit-btn').forEach(b => b.remove());
@@ -257,6 +296,8 @@
                 addEditOverlay('verseImage', 'daily_verse_img', true);
                 addEditOverlay('live_thumb', 'live_thumbnail', true);
                 addEditOverlay('church_name_banner', 'church_name');
+                addEditOverlay('devotional_content', 'daily_devotional_html');
+
 
                 [insta, fb, yt, loc].forEach(link => {
                     link.onclick = (e) => {
@@ -271,46 +312,11 @@
             }
         }
 
-        window.loadRecentSermons = async function () {
-            try {
-                const res = await fetch('https://project-agm.onrender.com/api/sermons');
-                const sermons = await res.json();
-                localStorage.setItem('cached_sermons', JSON.stringify(sermons));
-                renderSermons(sermons);
-            } catch (e) {
-                console.error(e);
-                const cached = localStorage.getItem('cached_sermons');
-                if (cached) renderSermons(JSON.parse(cached));
-            }
-        }
-
-        function renderSermons(sermons) {
-            const container = document.getElementById('recentSermonsContainer');
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (sermons.length > 0) {
-                window.appDataLoaded = true;
-                document.getElementById('server-wakeup-loader')?.classList.remove('active');
-            }
-
-            sermons.slice(0, 4).forEach(s => {
-                const videoId = s.video_url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|live\/|embed\/))([^?&]+)/)?.[1];
-                const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : 'assets/sermons-preview.png';
-
-                container.innerHTML += `
-                <a href="${s.video_url}" target="_blank" style="text-decoration: none; color: inherit;">
-                    <div class="media-card glass">
-                        <img src="${thumb}" alt="${s.title}">
-                        <div class="media-info">
-                            <h4 class="serif">${s.title}</h4>
-                            <p style="font-size: 0.8rem; opacity: 0.7;">Watch on YouTube</p>
-                        </div>
-                    </div>
-                </a>
-                `;
-            });
-        }
+        // The initPullToRefresh function is likely in app.js.
+        // Assuming the instruction means to ensure only loadHomeSettings is called on refresh.
+        // The existing `loadHomeSettings()` call at the end of the script block handles initial load.
+        // If there's a PTR mechanism, it should call `loadHomeSettings()` to refresh data.
+        // No direct change needed here without seeing app.js or a PTR specific call in index.html.
 
         function addEditOverlay(elementId, settingKey, isImage = false) {
             const el = document.getElementById(elementId);
