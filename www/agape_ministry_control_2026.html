@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Dashboard - Agape Gospel Ministries</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-tab {
+            display: none;
+            padding: 20px 0;
+        }
+
+        .admin-tab.active {
+            display: block;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-gold);
+            color: black;
+            font-weight: 700;
+        }
+
+        .admin-form {
+            display: none;
+            margin-top: 20px;
+            padding: 25px;
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+        }
+
+        .admin-form.active {
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .admin-card {
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        label {
+            display: block;
+            color: var(--primary-gold);
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-height: 90vh;
+            padding: 30px 20px;
+            border-radius: 20px;
+            overflow-y: auto;
+            position: relative;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            /* 16:9 Aspect Ratio */
+            height: 0;
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <style>
+        /* Security Gate Styles */
+        #admin-lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a192f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            text-align: center;
+        }
+        #admin-lock-screen .lock-icon {
+            font-size: 4rem;
+            color: var(--primary-gold);
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+    </style>
+</head>
+
+<body style="opacity: 0; transition: opacity 0.5s ease;">
+    <!-- Admin Security Gate -->
+    <div id="admin-lock-screen">
+        <div class="lock-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h2 class="serif" style="color: var(--primary-gold); margin-bottom: 30px;">Admin Access Required</h2>
+        <div class="glass" style="padding: 30px; border-radius: 20px; width: 100%; max-width: 350px;">
+            <p style="font-size: 0.8rem; margin-bottom: 20px; opacity: 0.7;">Please enter your ministry access code to continue.</p>
+            <input type="password" id="adminPassword" placeholder="Required Password" class="input-field" style="text-align: center; font-size: 1.2rem; letter-spacing: 5px;">
+            <button onclick="checkAdminGate()" class="btn" style="width: 100%;">Verify Access</button>
+            <p onclick="window.location.href='index.html'" style="margin-top: 20px; font-size: 0.75rem; color: var(--primary-gold); cursor: pointer;">← Return to App</p>
+        </div>
+    </div>
+
+    <script>
+        // Immediate access check to prevent flicker
+        if (localStorage.getItem('isAdmin') === 'true') {
+            const gate = document.getElementById('admin-lock-screen');
+            if (gate) gate.style.display = 'none';
+            document.body.style.opacity = '1';
+        } else {
+            document.body.style.opacity = '1';
+        }
+
+        async function checkAdminGate() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === 'AGAPE2026') { // Your secure admin password
+                localStorage.setItem('isAdmin', 'true');
+                showStatus('Access Granted! Welcome back.', 'success');
+                document.getElementById('admin-lock-screen').style.display = 'none';
+            } else {
+                showStatus('Invalid Password. Please try again.', 'error');
+            }
+        }
+    </script>
+    <div class="app-container">
+        <div class="space"></div>
+        <header class="section" style="padding-top: 30px; text-align: center;">
+            <h1 class="serif" style="color: var(--primary-gold); font-size: 1.8rem;">Admin Central</h1>
+            <p style="color: var(--text-muted); font-size: 0.8rem;">Full Ministry Control</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px; overflow-x: auto; padding-bottom: 10px;">
+                <button onclick="showTab('settings')" id="btn-settings" class="tab-btn active">Apps</button>
+                <button onclick="showTab('events')" id="btn-events" class="tab-btn">Events</button>
+                <button onclick="showTab('sermons')" id="btn-sermons" class="tab-btn">Songs</button>
+                <button onclick="showTab('prayers')" id="btn-prayers" class="tab-btn">Prayers</button>
+                <button onclick="showTab('messages')" id="btn-messages" class="tab-btn">Messages</button>
+            </div>
+        </header>
+
+        <!-- APP SETTINGS TAB -->
+        <div id="tab-settings" class="admin-tab active section" style="padding: 30px 20px;">
+            <div class="section-title">
+                <h2>General Apps Settings</h2>
+            </div>
+            <div class="glass" style="padding: 25px; border-radius: 25px;">
+                <div class="form-row">
+                    <label>Church Name</label>
+                    <input type="text" id="set_church_name" class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Founded Date</label>
+                    <input type="text" id="set_founded_date" class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Location Place</label>
+                    <input type="text" id="set_location_name" class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Mission Statement</label>
+                    <textarea id="set_mission_statement" class="input-field" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <label>Phone Number</label>
+                    <input type="text" id="set_phone" class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Email Address</label>
+                    <input type="text" id="set_email" class="input-field">
+                </div>
+
+                <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 30px 0;">
+
+                <div class="form-row">
+                    <label>Live/Featured Video Embed URL</label>
+                    <input type="text" id="set_live_video_url" class="input-field">
+                </div>
+
+                <div class="form-row">
+                    <label>Daily Verse Image</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="set_daily_verse_img" class="input-field" style="flex: 1;">
+                        <button onclick="browseFile('set_daily_verse_img')" class="btn"
+                            style="height: 45px; padding: 0 15px; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Browse</button>
+                    </div>
+                </div>
+
+                <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 30px 0;">
+                <div class="section-title">
+                    <h3>Social Connections</h3>
+                </div>
+
+                <div class="form-row">
+                    <label>Instagram URL</label>
+                    <input type="text" id="set_instagram_url" placeholder="https://instagram.com/yourpage"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Facebook URL</label>
+                    <input type="text" id="set_facebook_url" placeholder="https://facebook.com/yourpage"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>YouTube Channel URL</label>
+                    <input type="text" id="set_youtube_url" placeholder="https://youtube.com/@yourchannel"
+                        class="input-field">
+                </div>
+                <div class="form-row">
+                    <label>Google Maps / Location URL</label>
+                    <input type="text" id="set_google_maps_url" placeholder="https://maps.google.com/..."
+                        class="input-field">
+                </div>
+
+                <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 30px 0;">
+                <div class="section-title">
+                    <h3>Daily Devotional (Streams in the Desert)</h3>
+                </div>
+                <div class="form-row">
+                    <label>Update Telugu Content (Paste here)</label>
+                    <textarea id="set_daily_devotional_html" class="input-field"
+                        style="height: 300px; padding: 15px; font-size: 0.95rem; line-height: 1.6;"></textarea>
+                </div>
+
+                <button onclick="saveGlobalSettings()" class="btn" style="width: 100%; margin-top: 20px;">Save Global
+                    Details</button>
+                <input type="file" id="adminFileInput" style="display: none;" accept="image/*">
+            </div>
+        </div>
+
+        <!-- EVENTS TAB -->
+        <div id="tab-events" class="admin-tab section" style="padding: 30px 20px;">
+            <div class="section-title">
+                <h2>Manage Events</h2>
+                <button onclick="toggleForm('eventForm')" class="btn" style="padding: 10px 15px; font-size: 0.8rem;">+
+                    Add</button>
+            </div>
+            <div id="eventForm" class="admin-form" style="margin-bottom: 30px;">
+                <h3>Event Detail</h3>
+                <input type="hidden" id="eventId">
+                <input type="text" id="eventTitle" placeholder="Title" class="input-field">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <label
+                            style="font-size: 0.7rem; color: var(--primary-gold); margin-bottom: 5px; display: block;">EVENT
+                            DATE</label>
+                        <input type="date" id="eventDate" class="input-field" style="margin-bottom: 0;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label
+                            style="font-size: 0.7rem; color: var(--primary-gold); margin-bottom: 5px; display: block;">START
+                            TIME</label>
+                        <input type="time" id="eventTime" class="input-field" style="margin-bottom: 0;">
+                    </div>
+                </div>
+                <input type="text" id="eventLocation" placeholder="Location" class="input-field">
+                <button onclick="saveEvent()" class="btn">Save Event</button>
+            </div>
+            <div id="eventsList" style="margin-top: 40px; display: flex; flex-direction: column; gap: 20px;"></div>
+        </div>
+
+        <!-- SERMONS TAB renamed to SONGS -->
+        <div id="tab-sermons" class="admin-tab section" style="padding: 30px 20px;">
+            <div class="section-title">
+                <h2>Song Library</h2><br>
+                <button onclick="toggleForm('sermonForm')" class="btn" style="padding: 10px 15px; font-size: 0.8rem;">+
+                    Add Song</button>
+            </div>
+            <div id="sermonForm" class="admin-form" style="margin-bottom: 30px;">
+                <h3 id="sermonFormTitle">Add New Song</h3>
+                <input type="hidden" id="sermonId">
+                <input type="text" id="sermonTitle" placeholder="Song Title" class="input-field">
+                <textarea id="sermonSpeaker" placeholder="Song details / Artist / Lyrics" class="input-field"
+                    style="height: 120px; padding: 15px;"></textarea>
+                <input type="text" id="sermonVideoUrl" placeholder="YouTube URL" class="input-field">
+                <div style="display:flex; gap:10px;">
+                    <button onclick="saveSermon()" class="btn" id="sermonSubmitBtn">Add to Song List</button>
+                    <button onclick="cancelEdit('sermon')" class="btn"
+                        style="background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2);">Cancel</button>
+                </div>
+            </div>
+            <div id="sermonsList" style="margin-top: 40px; display: flex; flex-direction: column; gap: 20px;"></div>
+        </div>
+
+        <!-- Lyrics Modal Preview -->
+        <div id="lyricsModal" class="modal" onclick="if(event.target === this) closeLyricsModal()">
+            <div class="modal-content glass">
+                <span class="modal-close" onclick="closeLyricsModal()">&times;</span>
+                <h2 id="modalTitle" class="serif" style="color: var(--primary-gold); margin-bottom: 25px;"></h2>
+                <pre id="modalLyrics"
+                    style="white-space: pre-wrap; font-family: inherit; color: white; line-height: 1.8; margin-bottom: 30px; text-align: center;"></pre>
+
+                <div class="video-container" id="videoWrapper" style="display: none;">
+                    <iframe id="modalVideo" src="" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRAYERS TAB -->
+        <div id="tab-prayers" class="admin-tab section">
+            <div class="section-title">
+                <h2>Prayer Wall Admin</h2>
+            </div>
+            <div id="prayersList"></div>
+        </div>
+
+        <!-- Messages Tab -->
+        <div id="tab-messages" class="admin-tab section">
+            <div class="section-title">
+                <h2>Contact Messages</h2>
+            </div>
+            <div id="messagesList">
+                <!-- Messages load here -->
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 40px;">
+            <a href="index.html" style="color: #ff4757; text-decoration: none;">Back to home</a>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        const API = 'https://project-agm.onrender.com/api';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("Admin Dashboard Initializing...");
+            initDashboard();
+        });
+
+        async function initDashboard() {
+            // Re-check gate just in case
+            if (localStorage.getItem('isAdmin') !== 'true') {
+                return;
+            }
+            
+            const loaders = [loadSettings(), loadEvents(), loadSermons(), loadPrayers(), loadMessages()];
+            try {
+                await Promise.all(loaders);
+                console.log("All data loaded successfully");
+            } catch (err) {
+                console.error("Dashboard init failed:", err);
+                showStatus("Backend starting up... please wait.", "info");
+            }
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
+
+        function toggleForm(formId) {
+            document.getElementById(formId).classList.toggle('active');
+        }
+
+        // SETTINGS
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API}/settings`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const s = await res.json();
+                for (const key in s) {
+                    const el = document.getElementById('set_' + key);
+                    if (el) el.value = s[key];
+                }
+            } catch (e) {
+                console.error("Settings load failed", e);
+                throw e;
+            }
+        }
+
+        async function saveGlobalSettings() {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'daily_verse_img', 'instagram_url', 'facebook_url', 'youtube_url', 'google_maps_url', 'daily_devotional_html'];
+            const data = {};
+            keys.forEach(k => {
+                const el = document.getElementById('set_' + k);
+                if (el) data[k] = el.value;
+            });
+
+            // Auto-extract YouTube Thumbnail for Live Video
+            let videoUrl = data.live_video_url || '';
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = videoUrl.match(regExp);
+            const videoId = (match && match[2].length === 11) ? match[2] : null;
+
+            if (videoId) {
+                data.live_thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+            } else {
+                data.live_thumbnail = ''; // Save empty so index.html can try to load fallback
+            }
+
+            try {
+                const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+                const res = await fetch(`${API}/settings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    showStatus('Settings Updated successfully!', 'success');
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || `Server error`);
+                }
+            } catch (err) {
+                showStatus('Save failed: ' + err.message, 'error');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // File Browse Helper
+        function browseFile(targetId) {
+            const fileInput = document.getElementById('adminFileInput');
+            fileInput.onchange = async () => {
+                if (!fileInput.files[0]) return;
+                const formData = new FormData();
+                formData.append('image', fileInput.files[0]);
+
+                try {
+                    const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+                    const res = await fetch(`${API}/upload`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': token
+                        },
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (data.url) {
+                        document.getElementById(targetId).value = data.url;
+                        showStatus('Image uploaded!', 'success');
+                    }
+                } catch (err) {
+                    showStatus('Upload failed', 'error');
+                }
+            }
+            fileInput.click();
+        }
+
+        // EVENTS
+        let eventsData = [];
+        async function loadEvents() {
+            try {
+                const res = await fetch(`${API}/events`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                eventsData = await res.json();
+                const list = document.getElementById('eventsList');
+                list.innerHTML = '';
+                eventsData.forEach((item, index) => {
+                    list.innerHTML += `
+                        <div class="admin-card">
+                            <b>${item.title}</b><br><small>${item.date || ''} at ${window.formatTime12h(item.time)}</small>
+                            <div class="controls">
+                                <button onclick="triggerEditEvent(${index})" class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="deleteItem('events', '${item.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error("Events load failed", e);
+                throw e;
+            }
+        }
+
+        function triggerEditEvent(index) {
+            editEvent(eventsData[index]);
+        }
+
+        function editEvent(event) {
+            document.getElementById('eventId').value = event.id;
+            document.getElementById('eventTitle').value = event.title;
+            document.getElementById('eventDate').value = event.date;
+            document.getElementById('eventTime').value = event.time;
+            document.getElementById('eventLocation').value = event.location;
+            document.getElementById('eventForm').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveEvent() {
+            const id = document.getElementById('eventId').value;
+            const data = {
+                title: document.getElementById('eventTitle').value,
+                date: document.getElementById('eventDate').value,
+                time: document.getElementById('eventTime').value,
+                location: document.getElementById('eventLocation').value
+            };
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API}/events/${id}` : `${API}/events`;
+            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+
+            await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify(data)
+            });
+            cancelEdit('event');
+            loadEvents();
+        }
+
+        function cancelEdit(type) {
+            if (type === 'event') {
+                document.getElementById('eventId').value = '';
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventDate').value = '';
+                document.getElementById('eventTime').value = '';
+                document.getElementById('eventLocation').value = '';
+                document.getElementById('eventForm').classList.remove('active');
+            } else {
+                document.getElementById('sermonId').value = '';
+                document.getElementById('sermonTitle').value = '';
+                document.getElementById('sermonSpeaker').value = '';
+                document.getElementById('sermonVideoUrl').value = '';
+                document.getElementById('sermonFormTitle').innerText = 'Add New Song';
+                document.getElementById('sermonSubmitBtn').innerText = 'Add to Song List';
+                document.getElementById('sermonForm').classList.remove('active');
+            }
+        }
+
+        // SERMONS
+        let songsData = [];
+
+        async function loadSermons() {
+            try {
+                const res = await fetch(`${API}/sermons`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                songsData = await res.json();
+                const list = document.getElementById('sermonsList');
+                list.innerHTML = '';
+                songsData.forEach((item, index) => {
+                    const briefInfo = item.speaker.split('\n')[0];
+                    list.innerHTML += `
+                        <div class="admin-card">
+                            <div onclick="showLyricsByIndex(${index})" style="cursor: pointer;">
+                                <b style="color: var(--primary-gold); font-size: 1.1rem;">${item.title}</b><br>
+                                <small style="opacity: 0.7;">${briefInfo}</small>
+                            </div>
+                            <div class="controls">
+                                <button onclick="triggerEditSermon(${index})" class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="deleteItem('sermons', '${item.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Remove</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error("Sermons load failed", e);
+                throw e;
+            }
+        }
+
+        function triggerEditSermon(index) {
+            editSermon(songsData[index]);
+        }
+
+        function showLyricsByIndex(index) {
+            showLyrics(songsData[index]);
+        }
+
+        function showLyrics(song) {
+            document.getElementById('modalTitle').innerText = song.title;
+            document.getElementById('modalLyrics').innerText = song.speaker || 'No lyrics available.';
+
+            const embedUrl = getEmbedUrl(song.video_url);
+            if (embedUrl) {
+                document.getElementById('modalVideo').src = embedUrl;
+                document.getElementById('videoWrapper').style.display = 'block';
+            } else {
+                document.getElementById('videoWrapper').style.display = 'none';
+            }
+            document.getElementById('lyricsModal').classList.add('active');
+        }
+
+        function closeLyricsModal() {
+            document.getElementById('modalVideo').src = '';
+            document.getElementById('lyricsModal').classList.remove('active');
+        }
+
+        function getEmbedUrl(url) {
+            if (!url) return '';
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            const videoId = (match && match[2].length === 11) ? match[2] : null;
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+        }
+
+        function editSermon(song) {
+            document.getElementById('sermonId').value = song.id;
+            document.getElementById('sermonTitle').value = song.title;
+            document.getElementById('sermonSpeaker').value = song.speaker;
+            document.getElementById('sermonVideoUrl').value = song.video_url;
+            document.getElementById('sermonFormTitle').innerText = 'Edit Song';
+            document.getElementById('sermonSubmitBtn').innerText = 'Update Song';
+            document.getElementById('sermonForm').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveSermon() {
+            const id = document.getElementById('sermonId').value;
+            const videoUrl = document.getElementById('sermonVideoUrl').value;
+
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = videoUrl.match(regExp);
+            const videoId = (match && match[2].length === 11) ? match[2] : null;
+
+            const thumbnail = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : 'assets/default-song-thumb.png';
+
+            const data = {
+                title: document.getElementById('sermonTitle').value,
+                speaker: document.getElementById('sermonSpeaker').value,
+                video_url: videoUrl,
+                thumbnail_url: thumbnail,
+                category: 'Sunday'
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API}/sermons/${id}` : `${API}/sermons`;
+            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+
+            await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify(data)
+            });
+            cancelEdit('sermon');
+            loadSermons();
+        }
+
+        // PRAYERS
+        async function loadPrayers() {
+            const res = await fetch(`${API}/prayers`);
+            const data = await res.json();
+            const list = document.getElementById('prayersList');
+            list.innerHTML = '';
+            data.forEach(item => {
+                list.innerHTML += `
+                    <div class="admin-card">
+                        <small>From: ${item.user_name}</small><br>
+                        <i>"${item.request}"</i>
+                        <div class="controls">
+                            <button onclick="deleteItem('prayers', '${item.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // MESSAGES
+        async function loadMessages() {
+            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+            const res = await fetch(`${API}/messages`, {
+                headers: { 'Authorization': token }
+            });
+            const data = await res.json();
+            const list = document.getElementById('messagesList');
+            list.innerHTML = '';
+            if (data.length === 0) {
+                list.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">No messages received yet.</p>';
+                return;
+            }
+            data.forEach(m => {
+                list.innerHTML += `
+                    <div class="admin-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div>
+                                <h4 style="color:var(--primary-gold)">${m.subject}</h4>
+                                <small>From: <b>${m.name}</b> (${m.phone || 'No phone'})</small>
+                            </div>
+                            <button onclick="deleteItem('messages', '${m.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <p style="margin-top:10px; font-size:0.9rem; line-height:1.4;">${m.content}</p>
+                        <small style="opacity:0.5; font-size:0.7rem;">Received: ${new Date(m.createdAt).toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, month: 'short', day: 'numeric', year: 'numeric' })}</small>
+                    </div>
+                `;
+            });
+        }
+
+        async function deleteItem(type, id) {
+            const confirmed = confirm('Are you sure you want to remove this item?');
+            if (!confirmed) return;
+
+            try {
+                const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+                const res = await fetch(`${API}/${type}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': token
+                    }
+                });
+                if (res.ok) {
+                    showStatus('Item Deleted', 'success');
+                    if (type === 'events') loadEvents();
+                    if (type === 'sermons') loadSermons();
+                    if (type === 'prayers') loadPrayers();
+                    if (type === 'messages') loadMessages();
+                } else {
+                    showStatus('Delete failed', 'error');
+                }
+            } catch (e) {
+                showStatus('Connection error', 'error');
+            }
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

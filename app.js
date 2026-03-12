@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bar.innerHTML = `
             <span><i class="fa-solid fa-user-shield"></i> Admin Mode Active</span>
             <div style="display:flex; gap:10px; align-items:center;">
-                <a href="admin.html" style="color:black; text-decoration:none; font-size:0.7rem; background:rgba(255,255,255,0.3); padding:4px 8px; border-radius:4px;">Dashboard</a>
+                <a href="${atob('YWdhcGVfbWluaXN0cnlfY29udHJvbF8yMDI2Lmh0bWw=')}" style="color:black; text-decoration:none; font-size:0.7rem; background:rgba(255,255,255,0.3); padding:4px 8px; border-radius:4px;">Dashboard</a>
                 <button class="exit-btn" id="exitAdmin">Exit</button>
             </div>
         `;

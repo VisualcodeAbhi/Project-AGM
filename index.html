@@ -252,7 +252,7 @@
                     const pass = prompt("Enter Ministry Access Code:");
                     if (pass === 'AGAPE2026') {
                         localStorage.setItem('isAdmin', 'true');
-                        window.location.href = 'admin.html';
+                        window.location.href = atob('YWdhcGVfbWluaXN0cnlfY29udHJvbF8yMDI2Lmh0bWw=');
                     } else if (pass !== null) {
                         alert("Invalid code.");
                     }
