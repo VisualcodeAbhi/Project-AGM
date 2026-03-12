@@ -284,7 +284,10 @@ app.post('/api/youtube-videos', requireAdmin, async (req, res) => {
         const video = new YoutubeVideo(req.body);
         await video.save();
         res.json({ ...video.toObject(), id: video._id });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        console.error('Error saving YouTube video:', err);
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
 app.delete('/api/youtube-videos/:id', requireAdmin, async (req, res) => {
