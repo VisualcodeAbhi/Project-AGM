@@ -149,13 +149,6 @@
                         <p style="margin-top: 10px; opacity: 0.7;">Loading today's word...</p>
                     </div>
                 </div>
-                <div
-                    style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-                    <button onclick="shareDevotional()" class="btn"
-                        style="padding: 10px 20px; font-size: 0.85rem; background: rgba(255,255,255,0.05); border: 1px solid var(--primary-gold);">
-                        <i class="fa-solid fa-share-nodes"></i> Share Today's Blessing
-                    </button>
-                </div>
             </div>
         </section>
 
@@ -263,7 +256,10 @@
 
             // Daily Devotional Content
             if (s.daily_devotional_html) {
-                document.getElementById('devotional_content').innerHTML = s.daily_devotional_html;
+                let formatted = s.daily_devotional_html
+                    .replace(/\*([^\*]+)\*/g, '<b>$1</b>')
+                    .replace(/_([^_]+)_/g, '<i>$1</i>');
+                document.getElementById('devotional_content').innerHTML = formatted;
             } else {
                 document.getElementById('devotional_content').innerHTML = `
                     <div style="text-align: center; opacity: 0.5; padding: 20px;">
