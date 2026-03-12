@@ -70,6 +70,26 @@
             color: var(--text-muted);
         }
 
+        .live-featured {
+            border: 2px solid var(--primary-gold) !important;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+            position: relative;
+        }
+
+        .live-featured::before {
+            content: "FEATURED";
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: var(--primary-gold);
+            color: black;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 2px 10px;
+            border-radius: 10px;
+            z-index: 10;
+        }
+
         /* Player Modal */
         .player-modal {
             display: none;
@@ -133,6 +153,12 @@
                     <p style="margin-top: 15px;">Loading videos...</p>
                 </div>
             </div>
+            
+            <div style="text-align: center; padding: 20px 0 100px 0;">
+                <a href="https://youtube.com/@agapegospelministries2003" target="_blank" class="btn" style="background: rgba(255,0,0,0.1); border: 1px solid #ff0000; color: #ff0000; display: inline-flex; align-items: center; gap: 10px;">
+                    <i class="fa-brands fa-youtube"></i> Visit Official Channel
+                </a>
+            </div>
         </section>
 
         <nav class="glass bottom-nav">
@@ -176,8 +202,35 @@
 
         async function loadVideos() {
             try {
-                const res = await fetch('https://project-agm.onrender.com/api/youtube-videos');
-                const videos = await res.json();
+                // Fetch both settings (for live video) and the video gallery
+                const [settingsRes, videosRes] = await Promise.all([
+                    fetch('https://project-agm.onrender.com/api/settings'),
+                    fetch('https://project-agm.onrender.com/api/youtube-videos')
+                ]);
+
+                const settings = await settingsRes.json();
+                let videos = await videosRes.json();
+
+                // If a live/featured video exists in settings, make it the first video
+                if (settings.live_video_url) {
+                    const liveVideo = {
+                        title: "🔴 Featured / Live Video",
+                        video_url: settings.live_video_url,
+                        description: settings.mission_statement || "Join us now for our latest service.",
+                        thumbnail_url: settings.live_thumbnail || "",
+                        isLive: true
+                    };
+                    
+                    // Avoid duplicating if the same URL is already in the list
+                    const exists = videos.find(v => v.video_url === settings.live_video_url);
+                    if (!exists) {
+                        videos = [liveVideo, ...videos];
+                    } else {
+                        // Move existing to top
+                        videos = [exists, ...videos.filter(v => v.video_url !== settings.live_video_url)];
+                    }
+                }
+
                 renderVideos(videos);
             } catch (err) {
                 console.error(err);
@@ -193,15 +246,16 @@
             }
 
             container.innerHTML = videos.map(v => `
-                <div class="yt-card animate-in">
+                <div class="yt-card animate-in ${v.isLive ? 'live-featured' : ''}">
                     <div class="yt-thumb-container" onclick="openPlayer('${v.video_url}', '${v.title.replace(/'/g, "\\'")}')">
-                        <img src="${v.thumbnail_url || 'assets/sermons-preview.png'}" alt="${v.title}">
+                        <img src="${v.thumbnail_url || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1000'}" alt="${v.title}">
                         <div class="play-btn-overlay">
                             <i class="fa-solid fa-play"></i>
                         </div>
+                        ${v.isLive ? '<div style="position:absolute; top:10px; left:10px; background:#ff0000; color:white; padding:4px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; letter-spacing:1px; box-shadow:0 2px 10px rgba(0,0,0,0.3);">LIVE</div>' : ''}
                     </div>
                     <div class="yt-info">
-                        <h3>${v.title}</h3>
+                        <h3 style="${v.isLive ? 'color:var(--primary-gold)' : ''}">${v.title}</h3>
                         <p>${v.description || 'Watch on our YouTube channel'}</p>
                     </div>
                 </div>
