@@ -209,6 +209,7 @@
                 <button onclick="showTab('settings')" id="btn-settings" class="tab-btn active">Apps</button>
                 <button onclick="showTab('events')" id="btn-events" class="tab-btn">Events</button>
                 <button onclick="showTab('sermons')" id="btn-sermons" class="tab-btn">Songs</button>
+                <button onclick="showTab('youtube')" id="btn-youtube" class="tab-btn">Videos</button>
                 <button onclick="showTab('prayers')" id="btn-prayers" class="tab-btn">Prayers</button>
                 <button onclick="showTab('messages')" id="btn-messages" class="tab-btn">Messages</button>
             </div>
@@ -357,6 +358,26 @@
             <div id="sermonsList" style="margin-top: 40px; display: flex; flex-direction: column; gap: 20px;"></div>
         </div>
 
+        <!-- YouTube TAB -->
+        <div id="tab-youtube" class="admin-tab section" style="padding: 30px 20px;">
+            <div class="section-title">
+                <h2>YouTube Gallery</h2>
+                <button onclick="toggleForm('youtubeForm')" class="btn" style="padding: 10px 15px; font-size: 0.8rem;">+ Add Video</button>
+            </div>
+            <div id="youtubeForm" class="admin-form" style="margin-bottom: 30px;">
+                <h3 id="youtubeFormTitle">Add YouTube Video</h3>
+                <input type="hidden" id="youtubeId">
+                <input type="text" id="youtubeTitle" placeholder="Video Title" class="input-field">
+                <input type="text" id="youtubeUrl" placeholder="YouTube Video URL" class="input-field">
+                <textarea id="youtubeDesc" placeholder="Brief description (optional)" class="input-field" style="height: 80px;"></textarea>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="saveYoutubeVideo()" class="btn" id="youtubeSubmitBtn">Add Video</button>
+                    <button onclick="cancelEdit('youtube')" class="btn" style="background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2);">Cancel</button>
+                </div>
+            </div>
+            <div id="youtubeList" style="margin-top: 40px; display: flex; flex-direction: column; gap: 20px;"></div>
+        </div>
+
         <!-- Lyrics Modal Preview -->
         <div id="lyricsModal" class="modal" onclick="if(event.target === this) closeLyricsModal()">
             <div class="modal-content glass">
@@ -411,7 +432,7 @@
                 return;
             }
             
-            const loaders = [loadSettings(), loadEvents(), loadSermons(), loadPrayers(), loadMessages()];
+            const loaders = [loadSettings(), loadEvents(), loadSermons(), loadYoutubeVideos(), loadPrayers(), loadMessages()];
             try {
                 await Promise.all(loaders);
                 console.log("All data loaded successfully");
@@ -598,7 +619,7 @@
                 document.getElementById('eventTime').value = '';
                 document.getElementById('eventLocation').value = '';
                 document.getElementById('eventForm').classList.remove('active');
-            } else {
+            } else if (type === 'sermon' || type === 'songs') {
                 document.getElementById('sermonId').value = '';
                 document.getElementById('sermonTitle').value = '';
                 document.getElementById('sermonSpeaker').value = '';
@@ -606,6 +627,14 @@
                 document.getElementById('sermonFormTitle').innerText = 'Add New Song';
                 document.getElementById('sermonSubmitBtn').innerText = 'Add to Song List';
                 document.getElementById('sermonForm').classList.remove('active');
+            } else if (type === 'youtube') {
+                document.getElementById('youtubeId').value = '';
+                document.getElementById('youtubeTitle').value = '';
+                document.getElementById('youtubeUrl').value = '';
+                document.getElementById('youtubeDesc').value = '';
+                document.getElementById('youtubeFormTitle').innerText = 'Add YouTube Video';
+                document.getElementById('youtubeSubmitBtn').innerText = 'Add Video';
+                document.getElementById('youtubeForm').classList.remove('active');
             }
         }
 
@@ -720,6 +749,75 @@
             loadSermons();
         }
 
+        // YOUTUBE VIDEOS
+        let youtubeData = [];
+        async function loadYoutubeVideos() {
+            try {
+                const res = await fetch(`${API}/youtube-videos`);
+                youtubeData = await res.json();
+                const list = document.getElementById('youtubeList');
+                list.innerHTML = '';
+                youtubeData.forEach((item, index) => {
+                    list.innerHTML += `
+                        <div class="admin-card">
+                            <div style="display:flex; gap:15px; align-items:center;">
+                                <img src="${item.thumbnail_url || 'assets/sermons-preview.png'}" style="width:80px; height:50px; object-fit:cover; border-radius:8px;">
+                                <div>
+                                    <b style="color:var(--primary-gold)">${item.title}</b><br>
+                                    <small style="opacity:0.6; font-size:0.7rem;">${item.video_url}</small>
+                                </div>
+                            </div>
+                            <div class="controls">
+                                <button onclick="triggerEditYoutube(${index})" class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="deleteItem('youtube-videos', '${item.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) { console.error("YT load error", e); }
+        }
+
+        function triggerEditYoutube(index) {
+            const v = youtubeData[index];
+            document.getElementById('youtubeId').value = v.id;
+            document.getElementById('youtubeTitle').value = v.title;
+            document.getElementById('youtubeUrl').value = v.video_url;
+            document.getElementById('youtubeDesc').value = v.description || '';
+            document.getElementById('youtubeFormTitle').innerText = 'Edit YouTube Video';
+            document.getElementById('youtubeSubmitBtn').innerText = 'Update Video';
+            document.getElementById('youtubeForm').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveYoutubeVideo() {
+            const id = document.getElementById('youtubeId').value;
+            const url_str = document.getElementById('youtubeUrl').value;
+            
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = url_str.match(regExp);
+            const videoId = (match && match[2].length === 11) ? match[2] : null;
+            const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
+
+            const data = {
+                title: document.getElementById('youtubeTitle').value,
+                video_url: url_str,
+                description: document.getElementById('youtubeDesc').value,
+                thumbnail_url: thumb
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const endpoint = id ? `${API}/youtube-videos/${id}` : `${API}/youtube-videos`;
+            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+
+            await fetch(endpoint, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                body: JSON.stringify(data)
+            });
+            cancelEdit('youtube');
+            loadYoutubeVideos();
+        }
+
         // PRAYERS
         async function loadPrayers() {
             const res = await fetch(`${API}/prayers`);
@@ -785,6 +883,7 @@
                     showStatus('Item Deleted', 'success');
                     if (type === 'events') loadEvents();
                     if (type === 'sermons') loadSermons();
+                    if (type === 'youtube-videos') loadYoutubeVideos();
                     if (type === 'prayers') loadPrayers();
                     if (type === 'messages') loadMessages();
                 } else {

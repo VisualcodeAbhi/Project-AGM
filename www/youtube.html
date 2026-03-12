@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YouTube Gallery - Agape Gospel Ministries</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .video-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding-bottom: 20px;
+        }
+
+        .yt-card {
+            background: var(--glass-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+
+        .yt-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-gold);
+        }
+
+        .yt-thumb-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            background: #000;
+            cursor: pointer;
+        }
+
+        .yt-thumb-container img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        .play-btn-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px; height: 60px;
+            background: rgba(212, 175, 55, 0.9);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: black; font-size: 1.5rem;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .yt-info {
+            padding: 15px;
+        }
+
+        .yt-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--text-light);
+        }
+
+        .yt-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Player Modal */
+        .player-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 5000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .player-modal.active {
+            display: flex;
+        }
+
+        .close-player {
+            position: absolute;
+            top: 30px; right: 20px;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+        }
+
+        .video-wrapper {
+            width: 95%;
+            max-width: 800px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="space"></div>
+        <header class="section" style="padding-top: 25px; display: flex; align-items: center; justify-content: space-between;">
+            <a href="index.html" style="color: white; font-size: 1.35rem; padding-left: 10px;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div style="text-align: center; flex: 1; margin-right: 30px;">
+                <h1 class="serif" style="color: var(--primary-gold); font-size: 1.6rem;">YouTube Gallery</h1>
+                <p style="color: var(--text-muted); font-size: 0.8rem;">Watch & Be Blessed</p>
+            </div>
+        </header>
+
+        <section class="section">
+            <div id="video-container" class="video-grid">
+                <!-- YouTube videos will load here -->
+                <div style="text-align: center; padding: 50px; opacity: 0.5;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 15px;">Loading videos...</p>
+                </div>
+            </div>
+        </section>
+
+        <nav class="glass bottom-nav">
+            <a href="songs.html" class="nav-item">
+                <i class="fa-solid fa-music"></i>
+                <span>Songs</span>
+            </a>
+            <a href="events.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Events</span>
+            </a>
+            <a href="index.html" class="nav-item home-item">
+                <div class="home-circle">
+                    <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
+                </div>
+                <span></span>
+            </a>
+            <a href="bible.html" class="nav-item">
+                <i class="fa-solid fa-bible"></i>
+                <span>Bible</span>
+            </a>
+            <a href="contact.html" class="nav-item">
+                <i class="fa-solid fa-envelope"></i>
+                <span>Contact</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div id="playerModal" class="player-modal">
+        <span class="close-player" onclick="closePlayer()">&times;</span>
+        <div class="video-wrapper">
+            <iframe id="ytPlayer" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <h3 id="playingTitle" style="color: var(--primary-gold); margin-top: 20px; text-align: center; padding: 0 20px;"></h3>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadVideos);
+
+        async function loadVideos() {
+            try {
+                const res = await fetch('https://project-agm.onrender.com/api/youtube-videos');
+                const videos = await res.json();
+                renderVideos(videos);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('video-container').innerHTML = '<p style="text-align:center; padding:20px; opacity:0.6;">Unable to load videos. Please try again later.</p>';
+            }
+        }
+
+        function renderVideos(videos) {
+            const container = document.getElementById('video-container');
+            if (videos.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:50px; opacity:0.6;">No videos found.</p>';
+                return;
+            }
+
+            container.innerHTML = videos.map(v => `
+                <div class="yt-card animate-in">
+                    <div class="yt-thumb-container" onclick="openPlayer('${v.video_url}', '${v.title.replace(/'/g, "\\'")}')">
+                        <img src="${v.thumbnail_url || 'assets/sermons-preview.png'}" alt="${v.title}">
+                        <div class="play-btn-overlay">
+                            <i class="fa-solid fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="yt-info">
+                        <h3>${v.title}</h3>
+                        <p>${v.description || 'Watch on our YouTube channel'}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openPlayer(url, title) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            const videoId = (match && match[2].length === 11) ? match[2] : null;
+
+            if (videoId) {
+                const modal = document.getElementById('playerModal');
+                const iframe = document.getElementById('ytPlayer');
+                const titleHeading = document.getElementById('playingTitle');
+                
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                titleHeading.innerText = title;
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        function closePlayer() {
+            const modal = document.getElementById('playerModal');
+            const iframe = document.getElementById('ytPlayer');
+            iframe.src = '';
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+
+</html>

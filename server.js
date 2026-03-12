@@ -112,6 +112,9 @@ const Message = mongoose.model('Message', MessageSchema);
 const DeviceTokenSchema = new mongoose.Schema({ token: { type: String, unique: true } }, { timestamps: true });
 const DeviceToken = mongoose.model('DeviceToken', DeviceTokenSchema);
 
+const YoutubeVideoSchema = new mongoose.Schema({ title: String, description: String, video_url: String, thumbnail_url: String }, { timestamps: true });
+const YoutubeVideo = mongoose.model('YoutubeVideo', YoutubeVideoSchema);
+
 async function sendPushNotification(title, body, data = {}) {
     console.log(`[Push Notification] ${title}: ${body}`);
     const tokens = await DeviceToken.find();
@@ -264,6 +267,36 @@ app.delete('/api/sermons/:id', requireAdmin, async (req, res) => {
 app.put('/api/sermons/:id', requireAdmin, async (req, res) => {
     try {
         await Sermon.findByIdAndUpdate(req.params.id, req.body);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// --- YouTube Videos ---
+app.get('/api/youtube-videos', async (req, res) => {
+    try {
+        const videos = await YoutubeVideo.find().sort({ createdAt: -1 });
+        res.json(videos.map(v => ({ ...v.toObject(), id: v._id })));
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/youtube-videos', requireAdmin, async (req, res) => {
+    try {
+        const video = new YoutubeVideo(req.body);
+        await video.save();
+        res.json({ ...video.toObject(), id: video._id });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/youtube-videos/:id', requireAdmin, async (req, res) => {
+    try {
+        await YoutubeVideo.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/youtube-videos/:id', requireAdmin, async (req, res) => {
+    try {
+        await YoutubeVideo.findByIdAndUpdate(req.params.id, req.body);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
