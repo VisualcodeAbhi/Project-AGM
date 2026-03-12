@@ -138,9 +138,68 @@
             height: 100%;
         }
     </style>
+    <style>
+        /* Security Gate Styles */
+        #admin-lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a192f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            text-align: center;
+        }
+        #admin-lock-screen .lock-icon {
+            font-size: 4rem;
+            color: var(--primary-gold);
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+    </style>
 </head>
 
-<body>
+<body style="opacity: 0; transition: opacity 0.5s ease;">
+    <!-- Admin Security Gate -->
+    <div id="admin-lock-screen">
+        <div class="lock-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h2 class="serif" style="color: var(--primary-gold); margin-bottom: 30px;">Admin Access Required</h2>
+        <div class="glass" style="padding: 30px; border-radius: 20px; width: 100%; max-width: 350px;">
+            <p style="font-size: 0.8rem; margin-bottom: 20px; opacity: 0.7;">Please enter your ministry access code to continue.</p>
+            <input type="password" id="adminPassword" placeholder="Required Password" class="input-field" style="text-align: center; font-size: 1.2rem; letter-spacing: 5px;">
+            <button onclick="checkAdminGate()" class="btn" style="width: 100%;">Verify Access</button>
+            <p onclick="window.location.href='index.html'" style="margin-top: 20px; font-size: 0.75rem; color: var(--primary-gold); cursor: pointer;">← Return to App</p>
+        </div>
+    </div>
+
+    <script>
+        // Immediate access check to prevent flicker
+        if (localStorage.getItem('isAdmin') === 'true') {
+            const gate = document.getElementById('admin-lock-screen');
+            if (gate) gate.style.display = 'none';
+            document.body.style.opacity = '1';
+        } else {
+            document.body.style.opacity = '1';
+        }
+
+        async function checkAdminGate() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === 'AGAPE2026') { // Your secure admin password
+                localStorage.setItem('isAdmin', 'true');
+                showStatus('Access Granted! Welcome back.', 'success');
+                document.getElementById('admin-lock-screen').style.display = 'none';
+            } else {
+                showStatus('Invalid Password. Please try again.', 'error');
+            }
+        }
+    </script>
     <div class="app-container">
         <div class="space"></div>
         <header class="section" style="padding-top: 30px; text-align: center;">
@@ -347,6 +406,11 @@
         });
 
         async function initDashboard() {
+            // Re-check gate just in case
+            if (localStorage.getItem('isAdmin') !== 'true') {
+                return;
+            }
+            
             const loaders = [loadSettings(), loadEvents(), loadSermons(), loadPrayers(), loadMessages()];
             try {
                 await Promise.all(loaders);
@@ -547,6 +611,7 @@
 
         // SERMONS
         let songsData = [];
+
         async function loadSermons() {
             try {
                 const res = await fetch(`${API}/sermons`);

@@ -244,6 +244,27 @@
             window.appDataLoaded = true;
             document.getElementById('server-wakeup-loader')?.classList.remove('active');
 
+            // --- Secret Admin Trigger ---
+            const titleEl = document.getElementById('church_name');
+            let pressTimer;
+            const startPress = () => {
+                pressTimer = setTimeout(() => {
+                    const pass = prompt("Enter Ministry Access Code:");
+                    if (pass === 'AGAPE2026') {
+                        localStorage.setItem('isAdmin', 'true');
+                        window.location.href = 'admin.html';
+                    } else if (pass !== null) {
+                        alert("Invalid code.");
+                    }
+                }, 3000); // 3 second hold
+            };
+            const endPress = () => clearTimeout(pressTimer);
+
+            titleEl.addEventListener('mousedown', startPress);
+            titleEl.addEventListener('mouseup', endPress);
+            titleEl.addEventListener('touchstart', startPress, { passive: true });
+            titleEl.addEventListener('touchend', endPress, { passive: true });
+
             // Social Links
             const insta = document.getElementById('link_insta');
             if (s.instagram_url) { insta.href = s.instagram_url; insta.style.display = 'block'; } else insta.style.display = 'none';
