@@ -67,6 +67,9 @@ app.use(cors());
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 app.use(express.json());
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 app.use(express.static(path.join(__dirname, '')));
 
 // Admin Authentication Middleware
