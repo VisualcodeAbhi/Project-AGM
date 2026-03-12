@@ -308,6 +308,13 @@ app.post('/api/youtube-videos', requireAdmin, async (req, res) => {
     }
 });
 
+app.delete('/api/youtube-videos', requireAdmin, async (req, res) => {
+    try {
+        await YoutubeVideo.deleteMany({});
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.delete('/api/youtube-videos/:id', requireAdmin, async (req, res) => {
     try {
         await YoutubeVideo.findByIdAndDelete(req.params.id);
