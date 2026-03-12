@@ -18,14 +18,19 @@
         .book-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 12px;
             margin-top: 20px;
+        }
+
+        /* Long names in Telugu need more space */
+        .book-grid.telugu {
+            grid-template-columns: 1fr;
         }
 
         .book-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
-            padding: 15px;
+            padding: 15px 10px;
             border-radius: 15px;
             text-align: center;
             font-weight: 600;
@@ -34,7 +39,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 60px;
+            min-height: 55px;
+            font-size: 0.95rem;
+            line-height: 1.2;
+            overflow-wrap: break-word;
+        }
+
+        .telugu .book-card {
+            font-size: 1.1rem; /* Telugu needs slightly larger size for readability but more width */
+            padding: 12px 20px;
+            text-align: left;
+            justify-content: flex-start;
         }
 
         .book-card:active {
@@ -251,7 +266,7 @@
             const lastView = viewStack[viewStack.length - 1];
 
             if (lastView === 'language') resetToLanguage();
-            else if (lastView === 'testament') showTestamentChoice();
+            else if (lastView === 'testament') showTestamentChoice(true);
             else if (lastView === 'books') filterBooks(currentTestament, true);
             else if (lastView === 'chapters') loadChapters(currentBookData, true);
         }
@@ -339,7 +354,8 @@
             showTestamentChoice();
         }
 
-        function showTestamentChoice() {
+        function showTestamentChoice(isBack = false) {
+            if (!isBack) updateStack('testament');
             const data = bibleData[selectedLanguage];
             document.getElementById('bible-title-display').innerText = data.title;
             document.getElementById('ot-label').innerText = data.ot_label;
@@ -350,6 +366,7 @@
             document.getElementById('testament-choice').style.display = 'block';
             document.getElementById('bible-main-container').style.display = 'none';
             document.getElementById('bible-navigation').style.display = 'none';
+            document.getElementById('language-selection').style.display = 'none';
         }
 
         function resetToLanguage() {
@@ -363,6 +380,14 @@
             currentTestament = testament.toUpperCase();
             const books = bibleData[selectedLanguage][currentTestament];
             const list = document.getElementById('book-list');
+            
+            // Apply language-specific grid class
+            if (selectedLanguage === 'telugu') {
+                list.classList.add('telugu');
+            } else {
+                list.classList.remove('telugu');
+            }
+
             list.innerHTML = '';
 
             books.forEach(book => {
@@ -378,6 +403,7 @@
             document.getElementById('book-list').style.display = 'grid';
             document.getElementById('chapter-list').style.display = 'none';
             document.getElementById('verse-list').style.display = 'none';
+            document.getElementById('language-selection').style.display = 'none';
 
             document.getElementById('bible-navigation').style.display = 'flex';
             const testLabel = bibleData[selectedLanguage][currentTestament.toLowerCase() + '_label'] || currentTestament;
