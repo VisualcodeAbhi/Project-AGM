@@ -91,7 +91,7 @@
                                 </div>
                                 <div class="event-details" style="padding: 20px;">
                                     <h3 class="serif">${event.title}</h3>
-                                    <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-clock"></i> ${event.time}</p>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-clock"></i> ${window.formatTime12h(event.time)}</p>
                                     <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot"></i> ${event.location}</p>
                                     <button onclick="handleJoinEvent('${event.date}', '${event.time}')" class="join-btn" style="border:none; cursor:pointer; width: 100%;">
                                         <i class="fa-solid fa-play"></i> Join Service

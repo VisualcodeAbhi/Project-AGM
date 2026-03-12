@@ -212,6 +212,21 @@ function showToast(message, type = 'info') {
 // Global alert replacement
 window.showStatus = showToast;
 
+// Global Time Formatter (24h to 12h)
+window.formatTime12h = function(timeStr) {
+    if (!timeStr || !timeStr.includes(':')) return timeStr;
+    try {
+        const [hours, minutes] = timeStr.split(':');
+        let h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12; // the hour '0' should be '12'
+        return `${h}:${minutes} ${ampm}`;
+    } catch (e) {
+        return timeStr;
+    }
+};
+
 // --- Global Server Connection Loader for Cold Starts ---
 (function initServerWakeupLoader() {
     // Inject styles automatically

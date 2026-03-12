@@ -464,7 +464,7 @@
                 eventsData.forEach((item, index) => {
                     list.innerHTML += `
                         <div class="admin-card">
-                            <b>${item.title}</b><br><small>${item.date || ''} at ${item.time || ''}</small>
+                            <b>${item.title}</b><br><small>${item.date || ''} at ${window.formatTime12h(item.time)}</small>
                             <div class="controls">
                                 <button onclick="triggerEditEvent(${index})" class="icon-btn" style="color:var(--primary-gold)"><i class="fa-solid fa-pen"></i> Edit</button>
                                 <button onclick="deleteItem('events', '${item.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Delete</button>
@@ -688,7 +688,7 @@
                             <button onclick="deleteItem('messages', '${m.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i></button>
                         </div>
                         <p style="margin-top:10px; font-size:0.9rem; line-height:1.4;">${m.content}</p>
-                        <small style="opacity:0.5; font-size:0.7rem;">Received: ${new Date(m.createdAt).toLocaleString()}</small>
+                        <small style="opacity:0.5; font-size:0.7rem;">Received: ${new Date(m.createdAt).toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, month: 'short', day: 'numeric', year: 'numeric' })}</small>
                     </div>
                 `;
             });
