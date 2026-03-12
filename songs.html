@@ -117,12 +117,10 @@
                 const list = document.getElementById('songsList');
                 const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-                let displaySongs = allSongs.filter(s => {
-                    const isSong = s.category === 'Song' || !s.category;
-                    const matchesSearch = s.title.toLowerCase().includes(searchTerm) ||
-                        s.speaker.toLowerCase().includes(searchTerm);
-                    return isSong && matchesSearch;
-                });
+                let displaySongs = allSongs.filter(s =>
+                    s.title.toLowerCase().includes(searchTerm) ||
+                    s.speaker.toLowerCase().includes(searchTerm)
+                );
 
                 if (displaySongs.length === 0) {
                     list.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--text-muted);"><p>No songs found for "${searchTerm}"</p></div>`;
