@@ -212,10 +212,15 @@
     </script>
     <div class="app-container">
         <div class="space"></div>
-        <header class="section" style="padding-top: 30px; text-align: center;">
-            <h1 class="serif" style="color: var(--primary-gold); font-size: 1.8rem;">Admin Central</h1>
-            <p style="color: var(--text-muted); font-size: 0.8rem;">Full Ministry Control</p>
-            <div style="display: flex; gap: 10px; margin-top: 20px; overflow-x: auto; padding-bottom: 10px;">
+        <header class="section" style="padding-top: 30px; position: relative;">
+            <a href="index.html" class="glass" style="color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; position: absolute; left: 15px; top: 30px;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div style="text-align: center;">
+                <h1 class="serif" style="color: var(--primary-gold); font-size: 1.8rem; margin: 0;">Admin Central</h1>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Full Ministry Control</p>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 25px; overflow-x: auto; padding: 0 10px 10px 10px;">
                 <button onclick="showTab('settings')" id="btn-settings" class="tab-btn active">Apps</button>
                 <button onclick="showTab('events')" id="btn-events" class="tab-btn">Events</button>
                 <button onclick="showTab('sermons')" id="btn-sermons" class="tab-btn">Songs</button>
