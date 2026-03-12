@@ -265,22 +265,31 @@
             <div id="eventsList" style="margin-top: 40px; display: flex; flex-direction: column; gap: 20px;"></div>
         </div>
 
-        <!-- SERMONS TAB renamed to SONGS -->
         <div id="tab-sermons" class="admin-tab section" style="padding: 30px 20px;">
             <div class="section-title">
-                <h2>Song Library</h2><br>
+                <h2>Ministry Library</h2><br>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px;">Manage
+                    both Sermons (Home Page) and Song Book lyrics here.</p>
                 <button onclick="toggleForm('sermonForm')" class="btn" style="padding: 10px 15px; font-size: 0.8rem;">+
-                    Add Song</button>
+                    Add Content</button>
             </div>
             <div id="sermonForm" class="admin-form" style="margin-bottom: 30px;">
-                <h3 id="sermonFormTitle">Add New Song</h3>
+                <h3 id="sermonFormTitle">Add New Content</h3>
                 <input type="hidden" id="sermonId">
-                <input type="text" id="sermonTitle" placeholder="Song Title" class="input-field">
-                <textarea id="sermonSpeaker" placeholder="Song details / Artist / Lyrics" class="input-field"
+                <div class="form-row">
+                    <label>Category</label>
+                    <select id="sermonCategory" class="input-field">
+                        <option value="Sunday">Sunday Sermon (Shows on Home Page)</option>
+                        <option value="Song">Worship Song (Shows in Song Book)</option>
+                    </select>
+                </div>
+                <input type="text" id="sermonTitle" placeholder="Title" class="input-field">
+                <textarea id="sermonSpeaker" placeholder="Details / Artist / Lyrics" class="input-field"
                     style="height: 120px; padding: 15px;"></textarea>
-                <input type="text" id="sermonVideoUrl" placeholder="YouTube URL" class="input-field">
+                <input type="text" id="sermonVideoUrl" placeholder="YouTube URL (Optional for songs)"
+                    class="input-field">
                 <div style="display:flex; gap:10px;">
-                    <button onclick="saveSermon()" class="btn" id="sermonSubmitBtn">Add to Song List</button>
+                    <button onclick="saveSermon()" class="btn" id="sermonSubmitBtn">Save to Library</button>
                     <button onclick="cancelEdit('sermon')" class="btn"
                         style="background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2);">Cancel</button>
                 </div>
@@ -526,11 +535,12 @@
                 document.getElementById('eventForm').classList.remove('active');
             } else {
                 document.getElementById('sermonId').value = '';
+                document.getElementById('sermonCategory').value = 'Sunday';
                 document.getElementById('sermonTitle').value = '';
                 document.getElementById('sermonSpeaker').value = '';
                 document.getElementById('sermonVideoUrl').value = '';
-                document.getElementById('sermonFormTitle').innerText = 'Add New Song';
-                document.getElementById('sermonSubmitBtn').innerText = 'Add to Song List';
+                document.getElementById('sermonFormTitle').innerText = 'Add New Content';
+                document.getElementById('sermonSubmitBtn').innerText = 'Save to Library';
                 document.getElementById('sermonForm').classList.remove('active');
             }
         }
@@ -546,8 +556,14 @@
                 list.innerHTML = '';
                 songsData.forEach((item, index) => {
                     const briefInfo = item.speaker.split('\n')[0];
+                    const catLabel = item.category === 'Sunday' ? 'Sermon' : 'Song';
+                    const catColor = item.category === 'Sunday' ? '#d4af37' : '#34A853';
+
                     list.innerHTML += `
                         <div class="admin-card">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                                <span style="font-size:0.6rem; padding:2px 8px; border-radius:10px; background:${catColor}; color:black; font-weight:bold; text-transform:uppercase;">${catLabel}</span>
+                            </div>
                             <div onclick="showLyricsByIndex(${index})" style="cursor: pointer;">
                                 <b style="color: var(--primary-gold); font-size: 1.1rem;">${item.title}</b><br>
                                 <small style="opacity: 0.7;">${briefInfo}</small>
@@ -602,11 +618,12 @@
 
         function editSermon(song) {
             document.getElementById('sermonId').value = song.id;
+            document.getElementById('sermonCategory').value = song.category || 'Song';
             document.getElementById('sermonTitle').value = song.title;
             document.getElementById('sermonSpeaker').value = song.speaker;
             document.getElementById('sermonVideoUrl').value = song.video_url;
-            document.getElementById('sermonFormTitle').innerText = 'Edit Song';
-            document.getElementById('sermonSubmitBtn').innerText = 'Update Song';
+            document.getElementById('sermonFormTitle').innerText = 'Edit Content';
+            document.getElementById('sermonSubmitBtn').innerText = 'Update Content';
             document.getElementById('sermonForm').classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -622,11 +639,11 @@
             const thumbnail = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : 'assets/default-song-thumb.png';
 
             const data = {
+                category: document.getElementById('sermonCategory').value,
                 title: document.getElementById('sermonTitle').value,
                 speaker: document.getElementById('sermonSpeaker').value,
                 video_url: videoUrl,
-                thumbnail_url: thumbnail,
-                category: 'Sunday'
+                thumbnail_url: thumbnail
             };
 
             const method = id ? 'PUT' : 'POST';
