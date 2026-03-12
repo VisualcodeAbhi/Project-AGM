@@ -179,7 +179,17 @@
         </div>
     </div>
 
+    <div id="status-toast" style="position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; transition: 0.5s; z-index: 20000; opacity: 0; pointer-events: none; font-weight: 600; text-align: center; width: 80%; max-width: 300px;"></div>
+
     <script>
+        function showStatus(msg, type = 'info') {
+            const toast = document.getElementById('status-toast');
+            toast.innerText = msg;
+            toast.style.background = type === 'success' ? '#2ecc71' : (type === 'error' ? '#e74c3c' : '#3498db');
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+        }
+
         // Immediate access check to prevent flicker
         if (localStorage.getItem('isAdmin') === 'true') {
             const gate = document.getElementById('admin-lock-screen');
@@ -791,15 +801,21 @@
 
         async function saveYoutubeVideo() {
             const id = document.getElementById('youtubeId').value;
+            const title = document.getElementById('youtubeTitle').value;
             const url_str = document.getElementById('youtubeUrl').value;
             
+            if (!title || !url_str) {
+                showStatus('Please enter both Title and YouTube URL', 'error');
+                return;
+            }
+
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
             const match = url_str.match(regExp);
             const videoId = (match && match[2].length === 11) ? match[2] : null;
             const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
 
             const data = {
-                title: document.getElementById('youtubeTitle').value,
+                title: title,
                 video_url: url_str,
                 description: document.getElementById('youtubeDesc').value,
                 thumbnail_url: thumb
@@ -809,13 +825,24 @@
             const endpoint = id ? `${API}/youtube-videos/${id}` : `${API}/youtube-videos`;
             const token = "Bearer AGAPE_ADMIN_SECRET_2026";
 
-            await fetch(endpoint, {
-                method: method,
-                headers: { 'Content-Type': 'application/json', 'Authorization': token },
-                body: JSON.stringify(data)
-            });
-            cancelEdit('youtube');
-            loadYoutubeVideos();
+            try {
+                const res = await fetch(endpoint, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                    body: JSON.stringify(data)
+                });
+                
+                if (res.ok) {
+                    showStatus(id ? 'Video updated!' : 'Video added successfully!', 'success');
+                    cancelEdit('youtube');
+                    loadYoutubeVideos();
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    showStatus('Server Error: ' + (errData.error || 'Failed to save'), 'error');
+                }
+            } catch (err) {
+                showStatus('Connection failed. Is the server waking up?', 'error');
+            }
         }
 
         // PRAYERS
