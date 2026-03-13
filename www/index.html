@@ -132,7 +132,7 @@
         </section>
 
         <!-- Social Connections -->
-        <!-- <section class="section animate-in" style="animation-delay: 0.35s;">
+        <section class="section animate-in" style="animation-delay: 0.35s;">
             <div class="glass"
                 style="display: flex; justify-content: space-around; padding: 15px; border-radius: 20px;">
                 <a id="link_insta" href="#" target="_blank" style="color: #E1306C; font-size: 1.5rem;"><i
@@ -144,7 +144,7 @@
                 <a id="link_location" href="#" target="_blank" style="color: #34A853; font-size: 1.5rem;"><i
                         class="fa-solid fa-location-dot"></i></a>
             </div>
-        </section> -->
+        </section>
 
         <!-- Daily Devotional Section -->
         <section class="section animate-in" style="animation-delay: 0.4s; margin-bottom: 40px;">
@@ -301,13 +301,21 @@
 
             // Social Links
             const insta = document.getElementById('link_insta');
-            if (s.instagram_url) { insta.href = s.instagram_url; insta.style.display = 'block'; } else insta.style.display = 'none';
+            if (insta) {
+                if (s.instagram_url) { insta.href = s.instagram_url; insta.style.display = 'block'; } else insta.style.display = 'none';
+            }
             const fb = document.getElementById('link_facebook');
-            if (s.facebook_url) { fb.href = s.facebook_url; fb.style.display = 'block'; } else fb.style.display = 'none';
+            if (fb) {
+                if (s.facebook_url) { fb.href = s.facebook_url; fb.style.display = 'block'; } else fb.style.display = 'none';
+            }
             const yt = document.getElementById('link_youtube');
-            if (s.youtube_url) { yt.href = s.youtube_url; yt.style.display = 'block'; } else yt.style.display = 'none';
+            if (yt) {
+                if (s.youtube_url) { yt.href = s.youtube_url; yt.style.display = 'block'; } else yt.style.display = 'none';
+            }
             const loc = document.getElementById('link_location');
-            if (s.google_maps_url) { loc.href = s.google_maps_url; loc.style.display = 'block'; } else loc.style.display = 'none';
+            if (loc) {
+                if (s.google_maps_url) { loc.href = s.google_maps_url; loc.style.display = 'block'; } else loc.style.display = 'none';
+            }
 
             // Daily Devotional Content
             if (s.daily_devotional_html) {
