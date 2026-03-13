@@ -127,18 +127,19 @@
         </header>
 
         <!-- Language Selection -->
-        <div id="language-selection" class="section animate-in" style="text-align: center; padding-top: 50px;">
-            <p style="color: var(--text-muted); margin-bottom: 30px;">Choose your preferred language</p>
-            <div style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
+        <div id="language-selection" class="section animate-in" 
+            style="text-align: center; display: flex; flex-direction: column; justify-content: center; min-height: calc(100vh - 200px); padding-bottom: 80px;">
+            <p style="color: var(--text-muted); margin-bottom: 30px; font-weight: 500;">Choose your preferred language</p>
+            <div style="display: flex; flex-direction: column; gap: 20px; align-items: center; width: 100%;">
                 <div class="glass" onclick="selectLanguage('telugu')"
-                    style="width: 100%; max-width: 300px; padding: 25px; border-radius: 20px; cursor: pointer; border: 1px solid var(--primary-gold);">
-                    <h2 class="serif" style="color: var(--primary-gold); margin-bottom: 5px;">తెలుగు బైబిల్</h2>
-                    <p style="font-size: 0.8rem; opacity: 0.7;">Telugu Bible</p>
+                    style="width: 100%; max-width: 320px; padding: 30px 20px; border-radius: 20px; cursor: pointer; border: 1px solid var(--primary-gold); transition: transform 0.2s;">
+                    <h2 class="serif" style="color: var(--primary-gold); margin-bottom: 8px; font-size: 1.6rem;">తెలుగు బైబిల్</h2>
+                    <p style="font-size: 0.85rem; opacity: 0.8;">Telugu Bible</p>
                 </div>
                 <div class="glass" onclick="selectLanguage('english')"
-                    style="width: 100%; max-width: 300px; padding: 25px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);">
-                    <h2 class="serif" style="color: white; margin-bottom: 5px;">English Bible</h2>
-                    <p style="font-size: 0.8rem; opacity: 0.7;">King James Version</p>
+                    style="width: 100%; max-width: 320px; padding: 30px 20px; border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s;">
+                    <h2 class="serif" style="color: white; margin-bottom: 8px; font-size: 1.6rem;">English Bible</h2>
+                    <p style="font-size: 0.85rem; opacity: 0.8;">King James Version</p>
                 </div>
             </div>
         </div>
