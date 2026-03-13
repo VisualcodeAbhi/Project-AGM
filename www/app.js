@@ -353,9 +353,19 @@ window.formatTime12h = function(timeStr) {
 
 // --- Mobile Push Notifications Registration ---
 async function setupPushNotifications() {
-    if (!window.Capacitor) return; // Only run on mobile
+    if (!window.Capacitor) return;
 
     const { PushNotifications } = window.Capacitor.Plugins;
+
+    // Create a mandatory channel for Android
+    await PushNotifications.createChannel({
+        id: 'agape_ministry_notifications',
+        name: 'Ministry Updates',
+        description: 'Notifications for live services and daily verses',
+        importance: 5,
+        visibility: 1,
+        vibration: true
+    });
 
     let permStatus = await PushNotifications.checkPermissions();
     if (permStatus.receive === 'prompt') {
@@ -377,6 +387,16 @@ async function setupPushNotifications() {
 
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
         console.log('Notification received:', notification);
+        // Show a visual indicator if app is in foreground
+        showToast(`✝️ ${notification.title}: ${notification.body}`, 'success');
+    });
+
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        console.log('Notification action performed:', action);
+        // Handle clicking the notification (e.g. go to live page)
+        if (action.notification.data && action.notification.data.url) {
+            window.location.href = action.notification.data.url;
+        }
     });
 }
 
