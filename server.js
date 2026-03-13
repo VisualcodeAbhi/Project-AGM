@@ -189,7 +189,10 @@ async function initializeDefaultSettings() {
         ['facebook_url', ''],
         ['youtube_url', ''],
         ['google_maps_url', ''],
-        ['daily_devotional_html', '']
+        ['daily_devotional_html', ''],
+        ['announcement_text', 'Special Youth Meeting this Saturday!'],
+        ['announcement_poster', 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=1000'],
+        ['announcement_active', 'true']
     ];
     for (let [key, value] of defaults) {
         await Setting.updateOne({ key }, { $setOnInsert: { value } }, { upsert: true });

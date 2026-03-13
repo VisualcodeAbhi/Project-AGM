@@ -116,29 +116,63 @@ const YoutubeVideoSchema = new mongoose.Schema({ title: String, description: Str
 const YoutubeVideo = mongoose.model('YoutubeVideo', YoutubeVideoSchema);
 
 async function sendPushNotification(title, body, data = {}) {
-    console.log(`[Push Notification] ${title}: ${body}`);
-    const tokens = await DeviceToken.find();
-    if (tokens.length === 0) return;
-
-    const registrationTokens = tokens.map(t => t.token);
-    const message = {
-        notification: { title, body },
-        data,
-        tokens: registrationTokens,
-    };
-
-    if (admin.apps.length > 0) {
-        try {
-            const response = await admin.messaging().sendMulticast(message);
-            console.log(`${response.successCount} messages were sent successfully`);
-            if (response.failureCount > 0) {
-                // Optionally cleanup failed tokens
-            }
-        } catch (error) {
-            console.error('Error sending push notification:', error);
+    console.log(`[Push Notification Attempt] ${title}: ${body}`);
+    try {
+        const tokens = await DeviceToken.find();
+        if (tokens.length === 0) {
+            console.log('No registered device tokens found.');
+            return;
         }
+
+        const registrationTokens = tokens.map(t => t.token);
+        
+        // Use the latest sendEachForMulticast for better reliability
+        const message = {
+            notification: { title, body },
+            data: data,
+            android: {
+                notification: {
+                    channel_id: 'agape_ministry_notifications',
+                    priority: 'high',
+                    sound: 'default'
+                }
+            },
+            tokens: registrationTokens
+        };
+
+        if (admin.apps.length > 0) {
+            const response = await admin.messaging().sendEachForMulticast(message);
+            console.log(`Push Summary: ${response.successCount} sent, ${response.failureCount} failed.`);
+            
+            // Clean up invalid tokens automatically
+            if (response.failureCount > 0) {
+                const failedTokens = [];
+                response.responses.forEach((resp, idx) => {
+                    if (!resp.success) {
+                        const errorCode = resp.error?.code;
+                        if (errorCode === 'messaging/registration-token-not-registered' || 
+                            errorCode === 'messaging/invalid-registration-token') {
+                            failedTokens.push(registrationTokens[idx]);
+                        }
+                    }
+                });
+                if (failedTokens.length > 0) {
+                    await DeviceToken.deleteMany({ token: { $in: failedTokens } });
+                    console.log(`Cleaned up ${failedTokens.length} stale tokens.`);
+                }
+            }
+        } else {
+            console.warn('Firebase Admin not initialized. Skipping push.');
+        }
+    } catch (error) {
+        console.error('Fatal error in push notification system:', error);
     }
 }
+
+app.post('/api/test-push', requireAdmin, async (req, res) => {
+    await sendPushNotification("Test Notification", "If you see this, push notifications are working! ✝️");
+    res.json({ success: true });
+});
 
 async function initializeDefaultSettings() {
     const defaults = [
@@ -155,7 +189,10 @@ async function initializeDefaultSettings() {
         ['facebook_url', ''],
         ['youtube_url', ''],
         ['google_maps_url', ''],
-        ['daily_devotional_html', '']
+        ['daily_devotional_html', ''],
+        ['announcement_text', 'Special Youth Meeting this Saturday!'],
+        ['announcement_poster', 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=1000'],
+        ['announcement_active', 'true']
     ];
     for (let [key, value] of defaults) {
         await Setting.updateOne({ key }, { $setOnInsert: { value } }, { upsert: true });

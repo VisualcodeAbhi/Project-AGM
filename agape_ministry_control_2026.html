@@ -279,6 +279,30 @@
 
                 <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 30px 0;">
                 <div class="section-title">
+                    <h3>Announcements</h3>
+                </div>
+                <div class="form-row">
+                    <label>Show Announcements Section?</label>
+                    <select id="set_announcement_active" class="input-field">
+                        <option value="true">Active (Visible)</option>
+                        <option value="false">Inactive (Hidden)</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Announcement Poster Image</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="set_announcement_poster" class="input-field" style="flex: 1;">
+                        <button onclick="browseFile('set_announcement_poster')" class="btn"
+                            style="height: 45px; padding: 0 15px; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Browse</button>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>Announcement Text / Heading</label>
+                    <input type="text" id="set_announcement_text" class="input-field">
+                </div>
+
+                <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 30px 0;">
+                <div class="section-title">
                     <h3>Social Connections</h3>
                 </div>
 
@@ -504,7 +528,7 @@
             btn.innerText = "Saving...";
             btn.disabled = true;
 
-            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'daily_verse_img', 'instagram_url', 'facebook_url', 'youtube_url', 'google_maps_url', 'daily_devotional_html'];
+            const keys = ['church_name', 'founded_date', 'location_name', 'mission_statement', 'phone', 'email', 'live_video_url', 'daily_verse_img', 'instagram_url', 'facebook_url', 'youtube_url', 'google_maps_url', 'daily_devotional_html', 'announcement_active', 'announcement_poster', 'announcement_text'];
             const data = {};
             keys.forEach(k => {
                 const el = document.getElementById('set_' + k);

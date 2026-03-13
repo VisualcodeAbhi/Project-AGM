@@ -89,6 +89,19 @@
             </div>
         </section>
 
+        <!-- Announcements Section -->
+        <section id="announcement_section" class="section animate-in" style="display: none; padding-top: 0;">
+            <div class="section-title">
+                <h2>Announcements</h2>
+            </div>
+            <div class="glass" style="overflow: hidden; border-radius: 20px;">
+                <img id="announcement_poster" src="" alt="Announcement" style="width: 100%; height: auto; display: block; object-fit: cover;">
+                <div style="padding: 20px; background: rgba(0,0,0,0.3);">
+                    <h3 id="announcement_text_display" class="serif" style="font-size: 1.2rem; color: var(--primary-gold); margin: 0;"></h3>
+                </div>
+            </div>
+        </section>
+
         <!-- Quick Actions -->
         <section class="section animate-in" style="animation-delay: 0.3s;">
             <div class="section-title">
@@ -271,6 +284,16 @@
             if (thumbSrc) document.getElementById('live_thumb').src = thumbSrc;
             if (s.daily_verse_img) document.getElementById('verseImage').src = s.daily_verse_img;
 
+            // Announcement Handle
+            const annSec = document.getElementById('announcement_section');
+            if (s.announcement_active === 'true' || s.announcement_active === true) {
+                annSec.style.display = 'block';
+                if (s.announcement_poster) document.getElementById('announcement_poster').src = s.announcement_poster;
+                if (s.announcement_text) document.getElementById('announcement_text_display').innerText = s.announcement_text;
+            } else {
+                annSec.style.display = 'none';
+            }
+
             window.appDataLoaded = true;
             document.getElementById('server-wakeup-loader')?.classList.remove('active');
 
@@ -344,6 +367,8 @@
                 addEditOverlay('live_thumb', 'live_thumbnail', true);
                 addEditOverlay('church_name_banner', 'church_name');
                 addEditOverlay('devotional_content', 'daily_devotional_html');
+                addEditOverlay('announcement_poster', 'announcement_poster', true);
+                addEditOverlay('announcement_text_display', 'announcement_text');
 
 
                 [insta, fb, yt, loc].forEach(link => {
