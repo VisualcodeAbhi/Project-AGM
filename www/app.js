@@ -62,41 +62,101 @@ function closeVerseModal() {
     }
 }
 
-async function shareToWhatsApp() {
-    const verseImg = document.getElementById('verseImage');
-    if (!verseImg) return;
+// Gallery/Generic Modal Functions
+function openImageModal(imgUrl, caption = '') {
+    const modal = document.getElementById('genericImageModal');
+    const modalImg = document.getElementById('genericModalImg');
+    const modalCaption = document.getElementById('genericModalCaption');
+    
+    if (modal && modalImg) {
+        modal.classList.add('active');
+        modalImg.src = imgUrl;
+        if (modalCaption) modalCaption.innerText = caption;
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('genericImageModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+async function shareImage(imgUrl, platform = 'general', title = 'Shared Image', text = 'Check this out from Agape Gospel Ministries') {
+    if (!imgUrl) return;
     
     // Check if the Web Share API is available and supports files
     if (navigator.share && navigator.canShare) {
         try {
-            // Fetch the image and convert it to a blob
-            const response = await fetch(verseImg.src);
+            const response = await fetch(imgUrl);
             const blob = await response.blob();
+            const file = new File([blob], 'AgapeShare.jpeg', { type: 'image/jpeg' });
             
-            // Create a file object from the blob
-            const file = new File([blob], 'DailyVerse.jpeg', { type: 'image/jpeg' });
-            
-            // Build the share data including the image file
             const shareData = {
                 files: [file],
-                title: 'Daily Verse',
-                text: 'Agape Gospel Ministries - Daily Verse'
+                title: title,
+                text: text
             };
 
-            // Attempt to share
             if (navigator.canShare(shareData)) {
                 await navigator.share(shareData);
-            } else {
-                throw new Error('This device does not support sharing images directly.');
+                return;
             }
         } catch (error) {
             console.error('Sharing failed:', error);
-            // Fallback for devices that don't support file sharing
-            alert("To share the image on WhatsApp:\n1. Long-press the image to save it.\n2. Open WhatsApp and share it from your gallery.");
         }
+    }
+
+    // Fallback logic for platforms if Share API fails or is unavailable
+    if (platform === 'whatsapp') {
+        const t = encodeURIComponent(text + " " + window.location.href);
+        window.open(`https://wa.me/?text=${t}`, '_blank');
+    } else if (platform === 'facebook') {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
     } else {
-        // Fallback for browsers without Share API
-        alert("To share the image on WhatsApp:\n1. Long-press the image to save it.\n2. Open WhatsApp and share it from your gallery.");
+        alert(`To share to ${platform}:\n1. Long-press the image to save it.\n2. Open ${platform} and upload it from your gallery.`);
+    }
+}
+
+async function shareVerse(platform = 'general') {
+    const verseImg = document.getElementById('verseImage');
+    if (!verseImg) return;
+    
+    const shareTitle = 'Daily Verse';
+    const shareText = 'Agape Gospel Ministries - Daily Verse';
+
+    // Check if the Web Share API is available and supports files
+    if (navigator.share && navigator.canShare) {
+        try {
+            const response = await fetch(verseImg.src);
+            const blob = await response.blob();
+            const file = new File([blob], 'DailyVerse.jpeg', { type: 'image/jpeg' });
+            
+            const shareData = {
+                files: [file],
+                title: shareTitle,
+                text: shareText
+            };
+
+            if (navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+                return;
+            }
+        } catch (error) {
+            console.error('Sharing failed:', error);
+        }
+    }
+
+    // Fallback logic for platforms if Share API fails or is unavailable
+    if (platform === 'whatsapp') {
+        const text = encodeURIComponent(shareText + " " + window.location.href);
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+    } else if (platform === 'facebook') {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+    } else {
+        alert(`To share to ${platform}:\n1. Long-press the image to save it.\n2. Open ${platform} and upload it from your gallery.`);
     }
 }
 
@@ -374,15 +434,31 @@ async function setupPushNotifications() {
 
     if (permStatus.receive !== 'granted') return;
 
-    await PushNotifications.register();
+    await PushNotifications.register().catch(err => {
+        console.error('Registration failed:', err);
+    });
 
     PushNotifications.addListener('registration', async (token) => {
-        console.log('Push Token:', token.value);
-        await fetch('https://project-agm.onrender.com/api/register-device', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token.value })
-        });
+        console.log('Push Token Registration Success:', token.value);
+        try {
+            const res = await fetch('https://project-agm.onrender.com/api/register-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token.value })
+            });
+            if (res.ok) {
+                console.log('Token successfully registered with server');
+            } else {
+                console.error('Failed to register token with server:', await res.text());
+            }
+        } catch (err) {
+            console.error('Error sending token to server:', err);
+        }
+    });
+
+    PushNotifications.addListener('registrationError', (error) => {
+        console.error('Push Registration Error:', error);
+        showToast('Push permission/registration error.', 'error');
     });
 
     PushNotifications.addListener('pushNotificationReceived', (notification) => {

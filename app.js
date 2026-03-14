@@ -434,15 +434,31 @@ async function setupPushNotifications() {
 
     if (permStatus.receive !== 'granted') return;
 
-    await PushNotifications.register();
+    await PushNotifications.register().catch(err => {
+        console.error('Registration failed:', err);
+    });
 
     PushNotifications.addListener('registration', async (token) => {
-        console.log('Push Token:', token.value);
-        await fetch('https://project-agm.onrender.com/api/register-device', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token.value })
-        });
+        console.log('Push Token Registration Success:', token.value);
+        try {
+            const res = await fetch('https://project-agm.onrender.com/api/register-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token.value })
+            });
+            if (res.ok) {
+                console.log('Token successfully registered with server');
+            } else {
+                console.error('Failed to register token with server:', await res.text());
+            }
+        } catch (err) {
+            console.error('Error sending token to server:', err);
+        }
+    });
+
+    PushNotifications.addListener('registrationError', (error) => {
+        console.error('Push Registration Error:', error);
+        showToast('Push permission/registration error.', 'error');
     });
 
     PushNotifications.addListener('pushNotificationReceived', (notification) => {

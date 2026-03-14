@@ -12,24 +12,48 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
-// Initialize Firebase Admin (Only if service account is provided)
 const serviceAccountPath = path.join(__dirname, 'agape-firebase-adminsdk.json');
+let firebaseInitialized = false;
+
 if (fs.existsSync(serviceAccountPath)) {
     try {
         const serviceAccount = require(serviceAccountPath);
-        if (serviceAccount.project_id && serviceAccount.private_key) {
+        // Check if it's a valid Service Account JSON (not a google-services.json)
+        if (serviceAccount.project_id && serviceAccount.private_key && serviceAccount.client_email) {
             admin.initializeApp({
                 credential: admin.credential.cert(serviceAccount)
             });
-            console.log('Firebase Admin Initialized.');
+            firebaseInitialized = true;
+            console.log('✅ Firebase Admin Initialized using JSON file.');
+        } else if (serviceAccount.project_info) {
+            console.error('❌ ERROR: agape-firebase-adminsdk.json is a "google-services.json" file. You need a "Service Account JSON" from Firebase Console -> Settings -> Service Accounts.');
         } else {
-            console.warn('Firebase Service Account file found but appears invalid (missing project_id or private_key). Skipping push notifications.');
+            console.warn('⚠️ Firebase Service Account file found but appears invalid (missing keys).');
         }
     } catch (err) {
-        console.error('Failed to initialize Firebase Admin:', err.message);
+        console.error('❌ Failed to initialize Firebase Admin from file:', err.message);
     }
-} else {
-    console.warn('Firebase Service Account not found. Push notifications will be skipped.');
+}
+
+// Fallback to Env Vars if not initialized (Useful for Render/Heroku)
+if (!firebaseInitialized && process.env.FIREBASE_PRIVATE_KEY) {
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            })
+        });
+        firebaseInitialized = true;
+        console.log('✅ Firebase Admin Initialized using Environment Variables.');
+    } catch (err) {
+        console.error('❌ Failed to initialize Firebase Admin from Env Vars:', err.message);
+    }
+}
+
+if (!firebaseInitialized) {
+    console.warn('⚠️ Push notifications are DISABLED because Firebase Admin is not initialized.');
 }
 
 const cloudinary = require('cloudinary').v2;
@@ -147,8 +171,8 @@ async function sendPushNotification(title, body, data = {}) {
             const response = await admin.messaging().sendEachForMulticast(message);
             console.log(`Push Summary: ${response.successCount} sent, ${response.failureCount} failed.`);
             
-            // Clean up invalid tokens automatically
             if (response.failureCount > 0) {
+                console.log('Push Failures:', JSON.stringify(response.responses.filter(r => !r.success).map(r => r.error)));
                 const failedTokens = [];
                 response.responses.forEach((resp, idx) => {
                     if (!resp.success) {
