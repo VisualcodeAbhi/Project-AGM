@@ -226,6 +226,7 @@
                 <button onclick="showTab('sermons')" id="btn-sermons" class="tab-btn">Songs</button>
                 <button onclick="showTab('youtube')" id="btn-youtube" class="tab-btn">Videos</button>
                 <button onclick="showTab('prayers')" id="btn-prayers" class="tab-btn">Prayers</button>
+                <button onclick="showTab('gallery')" id="btn-gallery" class="tab-btn">Gallery</button>
                 <button onclick="showTab('messages')" id="btn-messages" class="tab-btn">Messages</button>
             </div>
         </header>
@@ -453,6 +454,28 @@
             <div id="prayersList"></div>
         </div>
 
+        <!-- GALLERY TAB -->
+        <div id="tab-gallery" class="admin-tab section" style="padding: 30px 20px;">
+            <div class="section-title">
+                <h2>Photo Gallery</h2>
+                <button onclick="toggleForm('galleryForm')" class="btn" style="padding: 10px 15px; font-size: 0.8rem;">+ Add Photo</button>
+            </div>
+            <div id="galleryForm" class="admin-form" style="margin-bottom: 30px;">
+                <h3 id="galleryFormTitle">Add New Photo</h3>
+                <input type="hidden" id="galleryId">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="galleryUrl" placeholder="Image URL" class="input-field" style="flex: 1; margin-bottom: 0;">
+                    <button onclick="browseFile('galleryUrl')" class="btn" style="height: 45px; padding: 0 15px; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Browse</button>
+                </div>
+                <input type="text" id="galleryCaption" placeholder="Caption (optional)" class="input-field">
+                <div style="display:flex; gap:10px;">
+                    <button onclick="saveGalleryImage()" class="btn" id="gallerySubmitBtn">Add to Gallery</button>
+                    <button onclick="cancelEdit('gallery')" class="btn" style="background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2);">Cancel</button>
+                </div>
+            </div>
+            <div id="galleryList" style="margin-top: 40px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;"></div>
+        </div>
+
         <!-- Messages Tab -->
         <div id="tab-messages" class="admin-tab section">
             <div class="section-title">
@@ -483,7 +506,7 @@
                 return;
             }
             
-            const loaders = [loadSettings(), loadEvents(), loadSermons(), loadYoutubeVideos(), loadPrayers(), loadMessages()];
+            const loaders = [loadSettings(), loadEvents(), loadSermons(), loadYoutubeVideos(), loadPrayers(), loadGallery(), loadMessages()];
             try {
                 await Promise.all(loaders);
                 console.log("All data loaded successfully");
@@ -706,6 +729,13 @@
                 document.getElementById('youtubeFormTitle').innerText = 'Add YouTube Video';
                 document.getElementById('youtubeSubmitBtn').innerText = 'Add Video';
                 document.getElementById('youtubeForm').classList.remove('active');
+            } else if (type === 'gallery') {
+                document.getElementById('galleryId').value = '';
+                document.getElementById('galleryUrl').value = '';
+                document.getElementById('galleryCaption').value = '';
+                document.getElementById('galleryFormTitle').innerText = 'Add New Photo';
+                document.getElementById('gallerySubmitBtn').innerText = 'Add to Gallery';
+                document.getElementById('galleryForm').classList.remove('active');
             }
         }
 
@@ -926,6 +956,58 @@
             }
         }
 
+        // GALLERY
+        let galleryData = [];
+        async function loadGallery() {
+            try {
+                const res = await fetch(`${API}/gallery`);
+                galleryData = await res.json();
+                const list = document.getElementById('galleryList');
+                list.innerHTML = '';
+                galleryData.forEach((item, index) => {
+                    list.innerHTML += `
+                        <div class="admin-card" style="padding: 10px;">
+                            <img src="${item.url}" style="width:100%; height:120px; object-fit:cover; border-radius:12px; margin-bottom:10px;">
+                            <small style="display:block; margin-bottom:10px; opacity:0.7;">${item.caption || 'No caption'}</small>
+                            <div class="controls" style="justify-content:center;">
+                                <button onclick="deleteItem('gallery', '${item.id}')" class="icon-btn" style="color:#ff4757"><i class="fa-solid fa-trash"></i> Remove</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) { console.error("Gallery load error", e); }
+        }
+
+        async function saveGalleryImage() {
+            const url_str = document.getElementById('galleryUrl').value;
+            const caption = document.getElementById('galleryCaption').value;
+
+            if (!url_str) {
+                showStatus('Please provide an Image URL or Upload one', 'error');
+                return;
+            }
+
+            const data = { url: url_str, caption: caption };
+            const token = "Bearer AGAPE_ADMIN_SECRET_2026";
+
+            try {
+                const res = await fetch(`${API}/gallery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    showStatus('Photo added to gallery!', 'success');
+                    cancelEdit('gallery');
+                    loadGallery();
+                } else {
+                    showStatus('Failed to save to gallery', 'error');
+                }
+            } catch (err) {
+                showStatus('Connection failed', 'error');
+            }
+        }
+
         // PRAYERS
         async function loadPrayers() {
             const res = await fetch(`${API}/prayers`);
@@ -993,6 +1075,7 @@
                     if (type === 'sermons') loadSermons();
                     if (type === 'youtube-videos') loadYoutubeVideos();
                     if (type === 'prayers') loadPrayers();
+                    if (type === 'gallery') loadGallery();
                     if (type === 'messages') loadMessages();
                 } else {
                     showStatus('Delete failed', 'error');

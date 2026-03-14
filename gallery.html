@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Photo Gallery - Agape Gospel Ministries</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding-bottom: 30px;
+        }
+        .gallery-item {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            cursor: pointer;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+        .gallery-overlay {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+        }
+
+        #genericImageModal .modal-content {
+            max-width: 95%;
+            max-height: 70vh;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="space"></div>
+        <header class="section" style="padding-top: 40px; display: flex; align-items: center; gap: 20px;">
+            <a href="index.html" style="color: white; font-size: 1.2rem;"><i class="fa-solid fa-arrow-left"></i></a>
+            <h1 class="serif" style="color: white; font-size: 1.5rem; flex: 1;">Photo Gallery</h1>
+        </header>
+
+        <section class="section animate-in">
+            <div id="galleryGrid" class="gallery-grid">
+                <!-- Loading State -->
+                <div style="grid-column: span 2; padding: 40px; text-align: center; color: var(--text-muted);">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                    <p>Loading gallery...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Image Preview Modal -->
+        <div id="genericImageModal" class="modal">
+            <span class="modal-close" onclick="closeImageModal()">&times;</span>
+            <img class="modal-content" id="genericModalImg">
+            <p id="genericModalCaption" style="color: white; margin-top: 15px; text-align: center; font-family: 'Playfair Display', serif;"></p>
+            <div class="share-toolbar">
+                <button class="share-btn whatsapp" onclick="shareGalleryImage('whatsapp')">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </button>
+                <button class="share-btn facebook" onclick="shareGalleryImage('facebook')">
+                    <i class="fa-brands fa-facebook"></i>
+                </button>
+                <button class="share-btn instagram" onclick="shareGalleryImage('instagram')">
+                    <i class="fa-brands fa-instagram"></i>
+                </button>
+            </div>
+        </div>
+
+        <nav class="glass bottom-nav">
+             <a href="songs.html" class="nav-item">
+                <i class="fa-solid fa-music"></i>
+                <span>Songs</span>
+            </a>
+            <a href="events.html" class="nav-item">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Events</span>
+            </a>
+            <a href="index.html" class="nav-item home-item">
+                <div class="home-circle">
+                    <i class="fa-solid fa-house" style="font-size: 1.5rem;"></i>
+                </div>
+                <span></span>
+            </a>
+            <a href="bible.html" class="nav-item">
+                <i class="fa-solid fa-bible"></i>
+                <span>Bible</span>
+            </a>
+            <a href="contact.html" class="nav-item">
+                <i class="fa-solid fa-envelope-open-text"></i>
+                <span>Contact</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let currentGalleryImage = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGallery();
+        });
+
+        async function loadGallery() {
+            try {
+                const res = await fetch('https://project-agm.onrender.com/api/gallery');
+                const data = await res.json();
+                renderGallery(data);
+            } catch (error) {
+                console.error('Gallery fatal error:', error);
+                const grid = document.getElementById('galleryGrid');
+                grid.innerHTML = '<div style="grid-column: span 2; padding: 40px; text-align: center; color: var(--text-muted);"><p>Unable to load gallery. Please try again later.</p></div>';
+            }
+        }
+
+        function renderGallery(images) {
+            const grid = document.getElementById('galleryGrid');
+            
+            if (!images || images.length === 0) {
+                grid.innerHTML = '<div style="grid-column: span 2; padding: 40px; text-align: center; color: var(--text-muted);"><p>No photos in the gallery yet.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            images.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item glass animate-in';
+                item.style.animationDelay = `${index * 0.05}s`;
+                item.onclick = () => {
+                    currentGalleryImage = img;
+                    openImageModal(img.url, img.caption);
+                };
+
+                item.innerHTML = `
+                    <img src="${img.url}" loading="lazy">
+                    <div class="gallery-overlay">${img.caption || ''}</div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function shareGalleryImage(platform) {
+            if (!currentGalleryImage) return;
+            shareImage(currentGalleryImage.url, platform, 'Gallery Photo', currentGalleryImage.caption || 'Photo from Agape Gospel Ministries');
+        }
+    </script>
+</body>
+</html>

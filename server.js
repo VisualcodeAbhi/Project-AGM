@@ -115,6 +115,9 @@ const DeviceToken = mongoose.model('DeviceToken', DeviceTokenSchema);
 const YoutubeVideoSchema = new mongoose.Schema({ title: String, description: String, video_url: String, thumbnail_url: String }, { timestamps: true });
 const YoutubeVideo = mongoose.model('YoutubeVideo', YoutubeVideoSchema);
 
+const GalleryImageSchema = new mongoose.Schema({ url: String, caption: String }, { timestamps: true });
+const GalleryImage = mongoose.model('GalleryImage', GalleryImageSchema);
+
 async function sendPushNotification(title, body, data = {}) {
     console.log(`[Push Notification Attempt] ${title}: ${body}`);
     try {
@@ -458,6 +461,29 @@ app.get('/api/messages', requireAdmin, async (req, res) => {
 app.delete('/api/messages/:id', requireAdmin, async (req, res) => {
     try {
         await Message.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// --- Photo Gallery ---
+app.get('/api/gallery', async (req, res) => {
+    try {
+        const images = await GalleryImage.find().sort({ createdAt: -1 });
+        res.json(images.map(img => ({ ...img.toObject(), id: img._id })));
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/gallery', requireAdmin, async (req, res) => {
+    try {
+        const image = new GalleryImage(req.body);
+        await image.save();
+        res.json({ ...image.toObject(), id: image._id });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/gallery/:id', requireAdmin, async (req, res) => {
+    try {
+        await GalleryImage.findByIdAndDelete(req.params.id);
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

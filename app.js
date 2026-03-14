@@ -62,6 +62,64 @@ function closeVerseModal() {
     }
 }
 
+// Gallery/Generic Modal Functions
+function openImageModal(imgUrl, caption = '') {
+    const modal = document.getElementById('genericImageModal');
+    const modalImg = document.getElementById('genericModalImg');
+    const modalCaption = document.getElementById('genericModalCaption');
+    
+    if (modal && modalImg) {
+        modal.classList.add('active');
+        modalImg.src = imgUrl;
+        if (modalCaption) modalCaption.innerText = caption;
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('genericImageModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+async function shareImage(imgUrl, platform = 'general', title = 'Shared Image', text = 'Check this out from Agape Gospel Ministries') {
+    if (!imgUrl) return;
+    
+    // Check if the Web Share API is available and supports files
+    if (navigator.share && navigator.canShare) {
+        try {
+            const response = await fetch(imgUrl);
+            const blob = await response.blob();
+            const file = new File([blob], 'AgapeShare.jpeg', { type: 'image/jpeg' });
+            
+            const shareData = {
+                files: [file],
+                title: title,
+                text: text
+            };
+
+            if (navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+                return;
+            }
+        } catch (error) {
+            console.error('Sharing failed:', error);
+        }
+    }
+
+    // Fallback logic for platforms if Share API fails or is unavailable
+    if (platform === 'whatsapp') {
+        const t = encodeURIComponent(text + " " + window.location.href);
+        window.open(`https://wa.me/?text=${t}`, '_blank');
+    } else if (platform === 'facebook') {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+    } else {
+        alert(`To share to ${platform}:\n1. Long-press the image to save it.\n2. Open ${platform} and upload it from your gallery.`);
+    }
+}
+
 async function shareVerse(platform = 'general') {
     const verseImg = document.getElementById('verseImage');
     if (!verseImg) return;
