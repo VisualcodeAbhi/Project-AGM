@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Deployment Trigger: 2026-03-13-21-34 -->
+    <!-- Deployment Trigger: 2026-03-14-07-27 -->
     <title>Agape Gospel Ministries</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -192,8 +192,14 @@
         <span class="modal-close" onclick="closeVerseModal()">&times;</span>
         <img class="modal-content" id="modalImg">
         <div class="share-toolbar">
-            <button class="share-btn" onclick="shareToWhatsApp()">
-                <i class="fa-brands fa-whatsapp"></i> Share to WhatsApp
+            <button class="share-btn whatsapp" onclick="shareVerse('whatsapp')">
+                <i class="fa-brands fa-whatsapp"></i>
+            </button>
+            <button class="share-btn facebook" onclick="shareVerse('facebook')">
+                <i class="fa-brands fa-facebook"></i>
+            </button>
+            <button class="share-btn instagram" onclick="shareVerse('instagram')">
+                <i class="fa-brands fa-instagram"></i>
             </button>
         </div>
     </div>

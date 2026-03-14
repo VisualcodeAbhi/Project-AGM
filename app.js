@@ -62,41 +62,43 @@ function closeVerseModal() {
     }
 }
 
-async function shareToWhatsApp() {
+async function shareVerse(platform = 'general') {
     const verseImg = document.getElementById('verseImage');
     if (!verseImg) return;
     
+    const shareTitle = 'Daily Verse';
+    const shareText = 'Agape Gospel Ministries - Daily Verse';
+
     // Check if the Web Share API is available and supports files
     if (navigator.share && navigator.canShare) {
         try {
-            // Fetch the image and convert it to a blob
             const response = await fetch(verseImg.src);
             const blob = await response.blob();
-            
-            // Create a file object from the blob
             const file = new File([blob], 'DailyVerse.jpeg', { type: 'image/jpeg' });
             
-            // Build the share data including the image file
             const shareData = {
                 files: [file],
-                title: 'Daily Verse',
-                text: 'Agape Gospel Ministries - Daily Verse'
+                title: shareTitle,
+                text: shareText
             };
 
-            // Attempt to share
             if (navigator.canShare(shareData)) {
                 await navigator.share(shareData);
-            } else {
-                throw new Error('This device does not support sharing images directly.');
+                return;
             }
         } catch (error) {
             console.error('Sharing failed:', error);
-            // Fallback for devices that don't support file sharing
-            alert("To share the image on WhatsApp:\n1. Long-press the image to save it.\n2. Open WhatsApp and share it from your gallery.");
         }
+    }
+
+    // Fallback logic for platforms if Share API fails or is unavailable
+    if (platform === 'whatsapp') {
+        const text = encodeURIComponent(shareText + " " + window.location.href);
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+    } else if (platform === 'facebook') {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
     } else {
-        // Fallback for browsers without Share API
-        alert("To share the image on WhatsApp:\n1. Long-press the image to save it.\n2. Open WhatsApp and share it from your gallery.");
+        alert(`To share to ${platform}:\n1. Long-press the image to save it.\n2. Open ${platform} and upload it from your gallery.`);
     }
 }
 
